@@ -320,8 +320,8 @@ function MePageContent() {
       {/* Header */}
       <header className="border-b-2 border-black bg-bahamian-turquoise py-4 px-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-white font-bold text-headline-md hover:underline">
-            ← Home
+          <Link href="/explore" className="text-white font-bold text-headline-md hover:underline">
+            ← Explore
           </Link>
           <h1 className="text-display-sm text-white font-display text-center flex-1">
             My Dashboard

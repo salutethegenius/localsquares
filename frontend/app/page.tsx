@@ -1,344 +1,470 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@/lib/supabase'
+import { useEffect, useState, useRef } from 'react'
 
-interface Island {
-  id: string
-  name: string
-  slug: string
-  display_name: string
-  description: string | null
-}
+export default function LandingPage() {
+  const [isVisible, setIsVisible] = useState<Record<string, boolean>>({})
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
 
-interface Board {
-  id: string
-  neighborhood: string
-  slug: string
-  display_name: string
-  description: string | null
-  island_id: string | null
-}
-
-export default function HomePage() {
-  const [islands, setIslands] = useState<Island[]>([])
-  const [boards, setBoards] = useState<Board[]>([])
-  const [selectedIsland, setSelectedIsland] = useState<Island | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // Fetch islands on mount
   useEffect(() => {
-    let isMounted = true
-    let timeoutId: NodeJS.Timeout
-
-    async function fetchIslands() {
-      try {
-        const supabase = createBrowserClient()
-        
-        timeoutId = setTimeout(() => {
-          if (isMounted) {
-            setError('Connection timed out. Please check your internet connection.')
-            setLoading(false)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible((prev) => ({ ...prev, [entry.target.id]: true }))
           }
-        }, 10000)
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
 
-        const { data, error: fetchError } = await supabase
-          .from('islands')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order')
+    Object.values(sectionRefs.current).forEach((ref) => {
+      if (ref) observer.observe(ref)
+    })
 
-        clearTimeout(timeoutId)
-
-        if (!isMounted) return
-
-        if (fetchError) {
-          console.error('Error fetching islands:', fetchError)
-          // Fallback: if islands table doesn't exist yet, load boards directly
-          await fetchBoardsDirectly()
-        } else if (data && data.length > 0) {
-          setIslands(data)
-        } else {
-          // No islands yet, load boards directly
-          await fetchBoardsDirectly()
-        }
-      } catch (err) {
-        clearTimeout(timeoutId)
-        console.error('Error:', err)
-        // Fallback to loading boards directly
-        await fetchBoardsDirectly()
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    async function fetchBoardsDirectly() {
-      try {
-        const supabase = createBrowserClient()
-        const { data } = await supabase
-          .from('boards')
-          .select('*')
-          .order('display_name')
-        
-        if (data) {
-          setBoards(data)
-        }
-      } catch (err) {
-        console.error('Error fetching boards:', err)
-      }
-    }
-
-    fetchIslands()
-
-    return () => {
-      isMounted = false
-      if (timeoutId) clearTimeout(timeoutId)
-    }
+    return () => observer.disconnect()
   }, [])
 
-  // Fetch boards when island is selected
-  useEffect(() => {
-    if (!selectedIsland) return
-
-    async function fetchBoardsForIsland() {
-      try {
-        const supabase = createBrowserClient()
-        const { data, error: fetchError } = await supabase
-          .from('boards')
-          .select('*')
-          .eq('island_id', selectedIsland!.id)
-          .order('display_name')
-
-        if (fetchError) {
-          console.error('Error fetching boards:', fetchError)
-        } else {
-          setBoards(data || [])
-        }
-      } catch (err) {
-        console.error('Error fetching boards:', err)
-      }
-    }
-
-    fetchBoardsForIsland()
-  }, [selectedIsland])
-
-  const handleBackToIslands = () => {
-    setSelectedIsland(null)
-    setBoards([])
+  const setRef = (id: string) => (el: HTMLElement | null) => {
+    sectionRefs.current[id] = el
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b-2 border-black bg-bahamian-turquoise py-6 px-4">
-        <h1 className="text-display-sm md:text-display-md text-white font-display text-center">
-          LocalSquares
-        </h1>
-        <p className="text-body-md text-white/90 text-center mt-2">
-          Your Neighborhood Billboards
-        </p>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-12">
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-bahamian-turquoise"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <div className="card p-8 max-w-md mx-auto">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <p className="text-body-lg text-black/70 mb-6">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="btn-primary"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        ) : islands.length > 0 && !selectedIsland ? (
-          // STEP 1: Island Selection
-          <>
-            <div className="text-center mb-12">
-              <h2 className="text-display-sm md:text-display-md text-black font-display mb-4">
-                Choose Your Island
-              </h2>
-              <p className="text-body-lg text-black/70 max-w-2xl mx-auto">
-                Select your island to explore local businesses in your area.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {islands.map((island) => (
-                <button
-                  key={island.id}
-                  onClick={() => setSelectedIsland(island)}
-                  className="card p-8 hover:shadow-bold-lg transition-shadow duration-200 text-left"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-bahamian-turquoise/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <svg className="w-8 h-8 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-headline-lg md:text-headline-xl text-bahamian-turquoise font-display mb-2">
-                        {island.display_name}
-                      </h3>
-                      {island.description && (
-                        <p className="text-body-md text-black/70">
-                          {island.description}
-                        </p>
-                      )}
-                      <div className="mt-4 text-bahamian-turquoise font-bold text-body-md">
-                        Explore Areas →
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </>
-        ) : selectedIsland ? (
-          // STEP 2: Constituency/Area Selection
-          <>
-            <div className="mb-8">
-              <button
-                onClick={handleBackToIslands}
-                className="text-bahamian-turquoise font-bold text-body-md hover:underline flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Islands
-              </button>
-            </div>
-
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 bg-bahamian-turquoise/10 px-4 py-2 rounded-full mb-4">
-                <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-bahamian-turquoise font-bold">{selectedIsland.display_name}</span>
-              </div>
-              <h2 className="text-display-sm md:text-display-md text-black font-display mb-4">
-                Choose Your Area
-              </h2>
-              <p className="text-body-lg text-black/70 max-w-2xl mx-auto">
-                Find local businesses in your neighborhood.
-              </p>
-            </div>
-
-            {boards.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="card p-8 max-w-md mx-auto">
-                  <div className="w-16 h-16 bg-bahamian-turquoise/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <h3 className="text-headline-lg text-black font-display mb-2">
-                    Coming Soon!
-                  </h3>
-                  <p className="text-body-lg text-black/70">
-                    We&apos;re setting up neighborhood boards for {selectedIsland.display_name}. Check back soon!
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {boards.map((board) => (
-                  <Link
-                    key={board.id}
-                    href={`/board/${board.slug}`}
-                    className="card p-6 hover:shadow-bold-lg transition-shadow duration-200"
-                  >
-                    <h3 className="text-headline-md text-bahamian-turquoise font-display mb-2">
-                      {board.display_name}
-                    </h3>
-                    {board.description && (
-                      <p className="text-body-sm text-black/70 line-clamp-2">
-                        {board.description}
-                      </p>
-                    )}
-                    <div className="mt-4 text-bahamian-turquoise font-bold text-body-sm">
-                      View Board →
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          // Fallback: Show boards directly if no islands configured
-          <>
-            <div className="text-center mb-12">
-              <h2 className="text-display-sm md:text-display-md text-black font-display mb-4">
-                Choose Your Neighborhood
-              </h2>
-              <p className="text-body-lg text-black/70 max-w-2xl mx-auto">
-                Explore local businesses and services. Tap a neighborhood to see what&apos;s happening.
-              </p>
-            </div>
-
-            {boards.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="card p-8 max-w-md mx-auto">
-                  <h3 className="text-headline-lg text-black font-display mb-2">
-                    Coming Soon!
-                  </h3>
-                  <p className="text-body-lg text-black/70">
-                    We&apos;re setting up neighborhood boards. Check back soon!
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {boards.map((board) => (
-                  <Link
-                    key={board.id}
-                    href={`/board/${board.slug}`}
-                    className="card p-8 hover:shadow-bold-lg transition-shadow duration-200"
-                  >
-                    <h3 className="text-headline-lg md:text-headline-xl text-bahamian-turquoise font-display mb-3">
-                      {board.display_name}
-                    </h3>
-                    {board.description && (
-                      <p className="text-body-md text-black/70">
-                        {board.description}
-                      </p>
-                    )}
-                    <div className="mt-6 text-bahamian-turquoise font-bold text-body-md">
-                      View Board →
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* CTA Section */}
-        <div className="mt-16 text-center">
-          <p className="text-body-lg text-black/70 mb-6">
-            Have a business? Claim your spot on the board.
-          </p>
-          <Link href="/claim" className="btn-primary inline-block">
-            Claim Your Pin
-          </Link>
+    <div className="min-h-screen bg-white overflow-x-hidden">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-bahamian-turquoise via-bahamian-turquoise to-cyan-400">
+          {/* Grid Pattern Overlay */}
+          <div 
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: '60px 60px'
+            }}
+          />
+          {/* Floating Pin Icons */}
+          <div className="absolute top-20 left-10 w-16 h-16 bg-white/10 rounded-full animate-pulse" />
+          <div className="absolute top-40 right-20 w-24 h-24 bg-bahamian-yellow/20 rounded-full animate-bounce" style={{ animationDuration: '3s' }} />
+          <div className="absolute bottom-32 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-20 right-1/3 w-20 h-20 bg-bahamian-yellow/20 rounded-full animate-bounce" style={{ animationDuration: '4s', animationDelay: '0.5s' }} />
         </div>
-      </main>
+
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <div className="mb-8 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+            <span className="w-2 h-2 bg-bahamian-yellow rounded-full animate-pulse" />
+            <span className="text-white/90 text-sm font-medium">Now live in The Bahamas</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display text-white mb-6 leading-tight">
+            Your Neighborhood is
+            <span className="block text-bahamian-yellow">Looking For You</span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Pin your business. Get discovered. Watch the customers roll in.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link 
+              href="/claim" 
+              className="group relative inline-flex items-center gap-3 bg-bahamian-yellow text-black font-bold px-8 py-4 rounded-full text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              <span>Get Started - Free Trial</span>
+              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+            <a 
+              href="#how-it-works" 
+              className="inline-flex items-center gap-2 text-white/90 hover:text-white font-medium transition-colors"
+            >
+              <span>See how it works</span>
+              <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+            <div className="w-1.5 h-3 bg-white/70 rounded-full mt-2 animate-bounce" />
+          </div>
+        </div>
+      </section>
+
+      {/* Value Proposition */}
+      <section 
+        id="value-props"
+        ref={setRef('value-props')}
+        className="py-24 px-6 bg-white"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${isVisible['value-props'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <h2 className="text-3xl md:text-5xl font-display text-black mb-4">
+              Why <span className="text-bahamian-turquoise">LocalSquares</span>?
+            </h2>
+            <p className="text-lg text-black/70 max-w-2xl mx-auto">
+              The easiest way for Bahamian businesses to get found by local customers.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: (
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                ),
+                title: 'Claim Your Spot',
+                description: 'Your business, your neighborhood. One pin on the board means maximum visibility to locals searching your area.',
+                delay: '0ms'
+              },
+              {
+                icon: (
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                ),
+                title: 'Get Seen First',
+                description: 'Our rotation algorithm ensures every merchant gets fair spotlight time. No big players drowning you out.',
+                delay: '150ms'
+              },
+              {
+                icon: (
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+                title: 'Pay Only When Ready',
+                description: '7-day free trial. No credit card required. Cancel anytime. No contracts, no hidden fees.',
+                delay: '300ms'
+              }
+            ].map((item, index) => (
+              <div
+                key={index}
+                className={`group bg-white border-2 border-black rounded-2xl p-8 shadow-bold hover:shadow-bold-lg transition-all duration-500 ${
+                  isVisible['value-props'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: item.delay }}
+              >
+                <div className="w-16 h-16 bg-bahamian-turquoise/10 rounded-2xl flex items-center justify-center text-bahamian-turquoise mb-6 group-hover:bg-bahamian-turquoise group-hover:text-white transition-colors duration-300">
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-display text-black mb-3">{item.title}</h3>
+                <p className="text-black/70 leading-relaxed">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section 
+        id="how-it-works"
+        ref={setRef('how-it-works')}
+        className="py-24 px-6 bg-gray-50"
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className={`text-center mb-16 transition-all duration-700 ${isVisible['how-it-works'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <h2 className="text-3xl md:text-5xl font-display text-black mb-4">
+              How It Works
+            </h2>
+            <p className="text-lg text-black/70">
+              Three simple steps to get your business on the map.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: '1',
+                title: 'Pick Your Island',
+                description: 'Choose New Providence, Grand Bahama, or your island. We cover the whole archipelago.',
+                icon: (
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ),
+                delay: '0ms'
+              },
+              {
+                step: '2',
+                title: 'Pin Your Business',
+                description: 'Add your details, hours, photos, and what makes your business special. Make it pop!',
+                icon: (
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                ),
+                delay: '200ms'
+              },
+              {
+                step: '3',
+                title: 'Get Discovered',
+                description: 'Locals find you when searching their area. From Bay Street to Carmichael, from Lucaya to Eight Mile Rock.',
+                icon: (
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                ),
+                delay: '400ms'
+              }
+            ].map((item, index) => (
+              <div
+                key={index}
+                className={`relative text-center transition-all duration-700 ${
+                  isVisible['how-it-works'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: item.delay }}
+              >
+                {/* Step Number */}
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-bahamian-yellow text-black font-bold rounded-full flex items-center justify-center text-lg shadow-lg z-10">
+                  {item.step}
+                </div>
+                
+                {/* Card */}
+                <div className="bg-white border-2 border-black rounded-2xl p-8 pt-12 shadow-bold h-full">
+                  <div className="w-20 h-20 bg-bahamian-turquoise/10 rounded-full flex items-center justify-center text-bahamian-turquoise mx-auto mb-6">
+                    {item.icon}
+                  </div>
+                  <h3 className="text-xl font-display text-black mb-3">{item.title}</h3>
+                  <p className="text-black/70">{item.description}</p>
+                </div>
+
+                {/* Connector Line */}
+                {index < 2 && (
+                  <div className="hidden md:block absolute top-1/2 -right-4 w-8 h-0.5 bg-bahamian-turquoise/30" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof / Community */}
+      <section 
+        id="community"
+        ref={setRef('community')}
+        className="py-24 px-6 bg-bahamian-turquoise relative overflow-hidden"
+      >
+        {/* Background Pattern */}
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}
+        />
+        
+        <div className={`max-w-4xl mx-auto text-center relative z-10 transition-all duration-700 ${isVisible['community'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-8">
+            <span className="text-white font-medium">Locals supporting locals</span>
+          </div>
+          
+          <blockquote className="text-2xl md:text-4xl font-display text-white mb-8 leading-relaxed">
+            &ldquo;From Bay Street to Carmichael, from Lucaya to Eight Mile Rock &mdash; 
+            <span className="text-bahamian-yellow"> we&apos;re bringing neighborhoods together.</span>&rdquo;
+          </blockquote>
+
+          <div className="flex flex-wrap justify-center gap-6 mt-12">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+              <svg className="w-5 h-5 text-bahamian-yellow" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="text-white text-sm">Secure Payments via Stripe</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+              <svg className="w-5 h-5 text-bahamian-yellow" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              <span className="text-white text-sm">Made for Bahamians</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+              <svg className="w-5 h-5 text-bahamian-yellow" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              <span className="text-white text-sm">Cancel Anytime</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Preview */}
+      <section 
+        id="pricing"
+        ref={setRef('pricing')}
+        className="py-24 px-6 bg-white"
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className={`text-center mb-12 transition-all duration-700 ${isVisible['pricing'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <h2 className="text-3xl md:text-5xl font-display text-black mb-4">
+              Simple, Honest Pricing
+            </h2>
+            <p className="text-lg text-black/70">
+              Start free. Upgrade when you&apos;re ready.
+            </p>
+          </div>
+
+          <div className={`grid md:grid-cols-3 gap-6 transition-all duration-700 delay-200 ${isVisible['pricing'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            {/* Free Trial */}
+            <div className="border-2 border-bahamian-turquoise rounded-2xl p-8 bg-bahamian-turquoise/5">
+              <div className="text-bahamian-turquoise font-bold text-sm uppercase tracking-wide mb-2">Start Here</div>
+              <h3 className="text-2xl font-display text-black mb-2">Free Trial</h3>
+              <div className="text-4xl font-display text-bahamian-turquoise mb-4">7 Days</div>
+              <p className="text-black/70 mb-6">No credit card required. Test everything risk-free.</p>
+              <ul className="space-y-3 text-black/70">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Full access to all features
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Create your pin
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  View analytics
+                </li>
+              </ul>
+            </div>
+
+            {/* Monthly */}
+            <div className="border-2 border-black rounded-2xl p-8 shadow-bold relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-bahamian-yellow text-black text-xs font-bold px-3 py-1 rounded-full">
+                MOST POPULAR
+              </div>
+              <div className="text-black/50 font-bold text-sm uppercase tracking-wide mb-2">Monthly</div>
+              <h3 className="text-2xl font-display text-black mb-2">Standard</h3>
+              <div className="text-4xl font-display text-black mb-4">$15<span className="text-lg text-black/50">/mo</span></div>
+              <p className="text-black/70 mb-6">Perfect for getting started and growing.</p>
+              <ul className="space-y-3 text-black/70">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Everything in trial
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Priority rotation
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Featured spot access
+                </li>
+              </ul>
+            </div>
+
+            {/* Annual */}
+            <div className="border-2 border-black/20 rounded-2xl p-8">
+              <div className="text-black/50 font-bold text-sm uppercase tracking-wide mb-2">Annual</div>
+              <h3 className="text-2xl font-display text-black mb-2">Best Value</h3>
+              <div className="text-4xl font-display text-black mb-4">$120<span className="text-lg text-black/50">/yr</span></div>
+              <p className="text-black/70 mb-6">Save $60/year. Commit to growth.</p>
+              <ul className="space-y-3 text-black/70">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Everything in monthly
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  2 months free
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Priority support
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-center text-black/50 mt-8">
+            Want a featured spot? Book premium placement for extra visibility!
+          </p>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section 
+        id="cta"
+        ref={setRef('cta')}
+        className="py-24 px-6 bg-gradient-to-br from-black via-gray-900 to-black relative overflow-hidden"
+      >
+        {/* Background Glow */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-bahamian-turquoise/20 rounded-full blur-3xl" />
+        
+        <div className={`max-w-3xl mx-auto text-center relative z-10 transition-all duration-700 ${isVisible['cta'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <h2 className="text-3xl md:text-5xl font-display text-white mb-6">
+            Ready to put your business
+            <span className="block text-bahamian-turquoise">on the map?</span>
+          </h2>
+          
+          <p className="text-lg text-white/70 mb-10 max-w-xl mx-auto">
+            Join Bahamian businesses already connecting with their neighborhoods on LocalSquares.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link 
+              href="/claim" 
+              className="group inline-flex items-center gap-3 bg-bahamian-yellow text-black font-bold px-10 py-5 rounded-full text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              <span>Get Started Now</span>
+              <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+            <Link 
+              href="/explore" 
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white font-medium transition-colors"
+            >
+              <span>or explore neighborhoods</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black py-8 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-white/50 text-sm">
+            &copy; {new Date().getFullYear()} LocalSquares. Made with love in The Bahamas.
+          </div>
+          <div className="flex gap-6 text-white/50 text-sm">
+            <Link href="/explore" className="hover:text-white transition-colors">Explore</Link>
+            <Link href="/claim" className="hover:text-white transition-colors">Get Started</Link>
+            <Link href="/me" className="hover:text-white transition-colors">Dashboard</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

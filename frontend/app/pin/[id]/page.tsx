@@ -56,8 +56,8 @@ export default function PinPage() {
           <p className="text-body-md text-black/70 mb-8">
             This pin doesn&apos;t exist.
           </p>
-          <Link href="/" className="btn-primary inline-block">
-            Go Home
+          <Link href="/explore" className="btn-primary inline-block">
+            Explore Neighborhoods
           </Link>
         </div>
       </div>

@@ -87,8 +87,8 @@ export default function BoardPage() {
           <p className="text-body-md text-black/70 mb-8">
             This neighborhood board doesn&apos;t exist.
           </p>
-          <Link href="/" className="btn-primary inline-block">
-            Go Home
+          <Link href="/explore" className="btn-primary inline-block">
+            Explore Neighborhoods
           </Link>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function BoardPage() {
       {/* Header */}
       <header className="border-b-2 border-black bg-bahamian-turquoise py-4 px-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-white font-bold text-headline-md hover:underline">
+          <Link href="/explore" className="text-white font-bold text-headline-md hover:underline">
             ← Back
           </Link>
           <div className="text-center flex-1">
