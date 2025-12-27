@@ -75,7 +75,7 @@ export default function LandingPage() {
               href="/claim" 
               className="group relative inline-flex items-center gap-3 bg-bahamian-yellow text-black font-bold px-8 py-4 rounded-full text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              <span>Get Started - Free Trial</span>
+              <span>Create Your Listing - Free</span>
               <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -146,8 +146,8 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 ),
-                title: 'Pay Only When Ready',
-                description: '7-day free trial. No credit card required. Cancel anytime. No contracts, no hidden fees.',
+                title: 'Just $1 to Go Live',
+                description: 'Free to join and create your listing. Only $1 to activate your pin. Then $14/mo to stay visible.',
                 delay: '300ms'
               }
             ].map((item, index) => (
@@ -305,41 +305,77 @@ export default function LandingPage() {
         ref={setRef('pricing')}
         className="py-24 px-6 bg-white"
       >
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className={`text-center mb-12 transition-all duration-700 ${isVisible['pricing'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <h2 className="text-3xl md:text-5xl font-display text-black mb-4">
               Simple, Honest Pricing
             </h2>
-            <p className="text-lg text-black/70">
-              Start free. Upgrade when you&apos;re ready.
+            <p className="text-lg text-black/70 max-w-2xl mx-auto">
+              Free to join. Free to create your listing. Just $1 to go live.
+            </p>
+          </div>
+
+          {/* How it works pricing flow */}
+          <div className={`bg-gray-50 rounded-2xl p-8 mb-10 transition-all duration-700 delay-100 ${isVisible['pricing'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-bahamian-turquoise text-white rounded-full flex items-center justify-center font-bold">1</div>
+                <div>
+                  <div className="font-bold text-black">Sign Up</div>
+                  <div className="text-bahamian-turquoise font-bold">FREE</div>
+                </div>
+              </div>
+              <svg className="w-6 h-6 text-black/30 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-bahamian-turquoise text-white rounded-full flex items-center justify-center font-bold">2</div>
+                <div>
+                  <div className="font-bold text-black">Create Listing</div>
+                  <div className="text-bahamian-turquoise font-bold">FREE</div>
+                </div>
+              </div>
+              <svg className="w-6 h-6 text-black/30 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-bahamian-yellow text-black rounded-full flex items-center justify-center font-bold">3</div>
+                <div>
+                  <div className="font-bold text-black">Go Live!</div>
+                  <div className="text-bahamian-yellow font-bold">$1</div>
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-black/60 mt-6 text-sm">
+              Your pin stays in draft mode until you activate it. No pressure, no surprises.
             </p>
           </div>
 
           <div className={`grid md:grid-cols-3 gap-6 transition-all duration-700 delay-200 ${isVisible['pricing'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            {/* Free Trial */}
+            {/* Free to Start */}
             <div className="border-2 border-bahamian-turquoise rounded-2xl p-8 bg-bahamian-turquoise/5">
               <div className="text-bahamian-turquoise font-bold text-sm uppercase tracking-wide mb-2">Start Here</div>
-              <h3 className="text-2xl font-display text-black mb-2">Free Trial</h3>
-              <div className="text-4xl font-display text-bahamian-turquoise mb-4">7 Days</div>
-              <p className="text-black/70 mb-6">No credit card required. Test everything risk-free.</p>
+              <h3 className="text-2xl font-display text-black mb-2">Free to Join</h3>
+              <div className="text-4xl font-display text-bahamian-turquoise mb-4">$0</div>
+              <p className="text-black/70 mb-6">Create your account and build your listing. No card needed.</p>
               <ul className="space-y-3 text-black/70">
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Full access to all features
+                  Create your account
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Create your pin
+                  Build your pin listing
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  View analytics
+                  Save as draft anytime
                 </li>
               </ul>
             </div>
@@ -350,27 +386,28 @@ export default function LandingPage() {
                 MOST POPULAR
               </div>
               <div className="text-black/50 font-bold text-sm uppercase tracking-wide mb-2">Monthly</div>
-              <h3 className="text-2xl font-display text-black mb-2">Standard</h3>
-              <div className="text-4xl font-display text-black mb-4">$15<span className="text-lg text-black/50">/mo</span></div>
-              <p className="text-black/70 mb-6">Perfect for getting started and growing.</p>
+              <h3 className="text-2xl font-display text-black mb-2">Go Live</h3>
+              <div className="text-4xl font-display text-black mb-1">$14<span className="text-lg text-black/50">/mo</span></div>
+              <div className="text-bahamian-turquoise font-bold text-sm mb-4">+ $1 one-time activation</div>
+              <p className="text-black/70 mb-6">Your pin goes live on the board. Get discovered!</p>
               <ul className="space-y-3 text-black/70">
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Everything in trial
+                  Pin visible on board
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Priority rotation
+                  Fair rotation spotlight
                 </li>
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Featured spot access
+                  View analytics
                 </li>
               </ul>
             </div>
@@ -379,8 +416,9 @@ export default function LandingPage() {
             <div className="border-2 border-black/20 rounded-2xl p-8">
               <div className="text-black/50 font-bold text-sm uppercase tracking-wide mb-2">Annual</div>
               <h3 className="text-2xl font-display text-black mb-2">Best Value</h3>
-              <div className="text-4xl font-display text-black mb-4">$120<span className="text-lg text-black/50">/yr</span></div>
-              <p className="text-black/70 mb-6">Save $60/year. Commit to growth.</p>
+              <div className="text-4xl font-display text-black mb-1">$140<span className="text-lg text-black/50">/yr</span></div>
+              <div className="text-bahamian-turquoise font-bold text-sm mb-4">+ $1 one-time activation</div>
+              <p className="text-black/70 mb-6">Save $28/year. Commit to growth.</p>
               <ul className="space-y-3 text-black/70">
                 <li className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -398,14 +436,14 @@ export default function LandingPage() {
                   <svg className="w-5 h-5 text-bahamian-turquoise" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Priority support
+                  Featured spot access
                 </li>
               </ul>
             </div>
           </div>
 
           <p className="text-center text-black/50 mt-8">
-            Want a featured spot? Book premium placement for extra visibility!
+            Want extra visibility? Book a featured spot for premium placement!
           </p>
         </div>
       </section>
@@ -434,7 +472,7 @@ export default function LandingPage() {
               href="/claim" 
               className="group inline-flex items-center gap-3 bg-bahamian-yellow text-black font-bold px-10 py-5 rounded-full text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              <span>Get Started Now</span>
+              <span>Create Your Free Listing</span>
               <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
