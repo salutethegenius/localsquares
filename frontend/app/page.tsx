@@ -62,8 +62,8 @@ export default function LandingPage() {
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-display text-white mb-6 leading-tight">
-            Your Neighborhood is
-            <span className="block text-bahamian-yellow">Looking For You</span>
+            People In Your Area Are Looking For
+            <span className="block text-bahamian-yellow">Businesses Like Yours</span>
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto leading-relaxed">
