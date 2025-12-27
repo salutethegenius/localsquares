@@ -272,8 +272,8 @@ export default function LandingPage() {
           </div>
           
           <blockquote className="text-2xl md:text-4xl font-display text-white mb-8 leading-relaxed">
-            &ldquo;From Bay Street to Carmichael, from Lucaya to Eight Mile Rock &mdash; 
-            <span className="text-bahamian-yellow"> we&apos;re bringing neighborhoods together.</span>&rdquo;
+            &ldquo;From Bay Street to Carmichael Rd, from Port Lucaya to Eight Mile Rock &mdash; 
+            <span className="text-bahamian-yellow"> we&apos;re bringing areas together.</span>&rdquo;
           </blockquote>
 
           <div className="flex flex-wrap justify-center gap-6 mt-12">
