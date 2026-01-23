@@ -1,22 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
-// Video files for hero background (compressed 720p)
-const HERO_VIDEOS = [
-  '/videos/hero-video-1.mp4',
-  '/videos/hero-video-2.mp4',
-]
+// Video file for hero background (compressed 720p)
+const HERO_VIDEO = '/videos/hero-video-1.mp4'
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({})
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
   
-  // Randomly select a video on component mount
-  const selectedVideo = useMemo(() => {
-    return HERO_VIDEOS[Math.floor(Math.random() * HERO_VIDEOS.length)]
-  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -54,7 +47,7 @@ export default function LandingPage() {
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
           >
-            <source src={selectedVideo} type="video/mp4" />
+            <source src={HERO_VIDEO} type="video/mp4" />
           </video>
           {/* Dark overlay for text readability */}
           <div className="absolute inset-0 bg-black/50" />
