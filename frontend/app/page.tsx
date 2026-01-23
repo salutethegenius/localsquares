@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 
 // Video file for hero background (compressed 720p)
-const HERO_VIDEO = '/videos/hero-video-1.mp4'
+const HERO_VIDEO = '/videos/hero-video.mp4'
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({})
