@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { useEffect, useState, useRef, useMemo } from 'react'
 
-// Video files for hero background
+// Video files for hero background (compressed 720p)
 const HERO_VIDEOS = [
-  '/videos/4931680_Person_Human_3840x2160.mp4',
-  '/videos/7188090_Woman_Female_3840x2160.mp4',
+  '/videos/hero-video-1.mp4',
+  '/videos/hero-video-2.mp4',
 ]
 
 export default function LandingPage() {
