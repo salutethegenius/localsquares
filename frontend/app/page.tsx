@@ -1,11 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
+
+// Video files for hero background
+const HERO_VIDEOS = [
+  '/videos/4931680_Person_Human_3840x2160.mp4',
+  '/videos/7188090_Woman_Female_3840x2160.mp4',
+]
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({})
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
+  
+  // Randomly select a video on component mount
+  const selectedVideo = useMemo(() => {
+    return HERO_VIDEOS[Math.floor(Math.random() * HERO_VIDEOS.length)]
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -34,24 +45,21 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-bahamian-turquoise via-bahamian-turquoise to-cyan-400">
-          {/* Grid Pattern Overlay */}
-          <div 
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-              `,
-              backgroundSize: '60px 60px'
-            }}
-          />
-          {/* Floating Pin Icons */}
-          <div className="absolute top-20 left-10 w-16 h-16 bg-white/10 rounded-full animate-pulse" />
-          <div className="absolute top-40 right-20 w-24 h-24 bg-bahamian-yellow/20 rounded-full animate-bounce" style={{ animationDuration: '3s' }} />
-          <div className="absolute bottom-32 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute bottom-20 right-1/3 w-20 h-20 bg-bahamian-yellow/20 rounded-full animate-bounce" style={{ animationDuration: '4s', animationDelay: '0.5s' }} />
+        {/* Video Background */}
+        <div className="absolute inset-0">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src={selectedVideo} type="video/mp4" />
+          </video>
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-black/50" />
+          {/* Turquoise tint overlay */}
+          <div className="absolute inset-0 bg-bahamian-turquoise/30 mix-blend-multiply" />
         </div>
 
         {/* Hero Content */}
