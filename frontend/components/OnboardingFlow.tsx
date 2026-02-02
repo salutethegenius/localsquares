@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { getStripe, formatCurrency, PLANS } from '@/lib/stripe'
+import { ALLOWED_ISLAND_SLUGS, IS_FREEPORT_MVP } from '@/lib/brand'
 
 type Step = 'auth' | 'business' | 'payment' | 'pin'
 type AuthConfirmation = 'email' | 'phone' | null
@@ -347,23 +348,40 @@ export default function OnboardingFlow() {
     if (step === 'pin') {
       async function fetchIslandsAndBoards() {
         try {
-          // Fetch islands
-          const { data: islandsData, error: islandsError } = await supabase
+          // Fetch islands (Freeport MVP: only allowed island slugs)
+          let query = supabase
             .from('islands')
             .select('id, slug, display_name')
             .eq('is_active', true)
             .order('sort_order')
-          
+          const { data: islandsData, error: islandsError } = await query
+
           if (!islandsError && islandsData && islandsData.length > 0) {
-            setIslands(islandsData)
+            const filteredIslands = ALLOWED_ISLAND_SLUGS.length > 0
+              ? islandsData.filter((i: { slug: string }) => ALLOWED_ISLAND_SLUGS.includes(i.slug))
+              : islandsData
+            setIslands(filteredIslands)
+            if (IS_FREEPORT_MVP && filteredIslands.length === 1) {
+              setSelectedIslandId(filteredIslands[0].id)
+            }
           }
 
-          // Fetch all boards
-          const { data: boardsData, error: boardsError } = await supabase
+          // Fetch boards (Freeport MVP: only boards in allowed islands)
+          let boardsQuery = supabase
             .from('boards')
             .select('id, slug, display_name, island_id')
             .order('display_name')
-          
+          if (ALLOWED_ISLAND_SLUGS.length > 0) {
+            const { data: islandRows } = await supabase
+              .from('islands')
+              .select('id')
+              .in('slug', ALLOWED_ISLAND_SLUGS)
+            const islandIds = (islandRows || []).map((r: { id: string }) => r.id)
+            if (islandIds.length > 0) {
+              boardsQuery = boardsQuery.in('island_id', islandIds)
+            }
+          }
+          const { data: boardsData, error: boardsError } = await boardsQuery
           if (!boardsError) {
             setBoards(boardsData || [])
           }
@@ -1066,8 +1084,8 @@ export default function OnboardingFlow() {
           </h2>
 
           <form onSubmit={handlePinCreation}>
-            {/* Island Selection */}
-            {islands.length > 0 && (
+            {/* Island Selection (hidden when Freeport MVP with single island) */}
+            {islands.length > 0 && !(IS_FREEPORT_MVP && islands.length === 1) && (
               <div className="mb-6">
                 <label className="block text-body-md font-bold text-black mb-2">
                   Select Island *
@@ -1100,16 +1118,16 @@ export default function OnboardingFlow() {
                 value={selectedBoardId}
                 onChange={(e) => setSelectedBoardId(e.target.value)}
                 required
-                disabled={islands.length > 0 && !selectedIslandId}
+                disabled={islands.length > 0 && !selectedIslandId && !(IS_FREEPORT_MVP && islands.length === 1)}
                 className="w-full px-4 py-3 border-2 border-black rounded-sign text-body-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-bahamian-turquoise disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">
-                  {islands.length > 0 && !selectedIslandId 
-                    ? 'Select an island first...' 
+                  {islands.length > 0 && !selectedIslandId && !(IS_FREEPORT_MVP && islands.length === 1)
+                    ? 'Select an island first...'
                     : 'Choose your area...'}
                 </option>
                 {boards
-                  .filter(board => !islands.length || !selectedIslandId || board.island_id === selectedIslandId)
+                  .filter(board => !islands.length || !selectedIslandId || board.island_id === selectedIslandId || (IS_FREEPORT_MVP && islands.length === 1))
                   .map((board) => (
                     <option key={board.id} value={board.id}>
                       {board.display_name}

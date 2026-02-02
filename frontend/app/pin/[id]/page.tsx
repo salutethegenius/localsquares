@@ -1,15 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { createBrowserClient } from '@/lib/supabase'
 import PinView from '@/components/PinView'
+import { ALLOWED_ISLAND_SLUGS, IS_FREEPORT_MVP } from '@/lib/brand'
 
 export default function PinPage() {
   const params = useParams()
-  const router = useRouter()
   const pinId = params.id as string
   const [pin, setPin] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -20,11 +19,19 @@ export default function PinPage() {
         const supabase = createBrowserClient()
         const { data, error } = await supabase
           .from('pins')
-          .select('*, board_id, boards(slug, display_name, id)')
+          .select('*, board_id, boards(slug, display_name, id, island_id, islands(slug))')
           .eq('id', pinId)
           .single()
 
         if (error) throw error
+        if (IS_FREEPORT_MVP && ALLOWED_ISLAND_SLUGS.length > 0) {
+          const allowed = data?.boards?.islands?.slug && ALLOWED_ISLAND_SLUGS.includes(data.boards.islands.slug)
+          if (!allowed) {
+            setPin(null)
+            setLoading(false)
+            return
+          }
+        }
         setPin(data)
       } catch (error) {
         console.error('Error fetching pin:', error)

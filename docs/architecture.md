@@ -4,6 +4,8 @@
 
 LocalSquares is a visual neighborhood billboard platform built with a modern, scalable architecture optimized for mobile-first usage, outdoor readability, and Bahamian context.
 
+A **Freeport-scoped MVP** deployment (branded as Freeport Squares) limits visible content to Grand Bahama/Freeport via `REGION_SCOPE` and `NEXT_PUBLIC_REGION_SCOPE`; see [freeport-mvp.md](freeport-mvp.md) for scope, toggling, and relationship to the full product.
+
 ## System Architecture
 
 ```
@@ -126,8 +128,13 @@ LocalSquares is a visual neighborhood billboard platform built with a modern, sc
 
 - **HTTPS Only**: All traffic encrypted
 - **Environment Variables**: Secrets stored securely
-- **CORS Configuration**: Restricted API access
-- **Input Validation**: Pydantic models validate all inputs
+- **CORS Configuration**: Restricted API access (explicit methods/headers in production)
+- **Input Validation**: Pydantic models validate all inputs; pin metadata size-limited
+- **Security Headers**: Backend and frontend set X-Content-Type-Options, X-Frame-Options, HSTS (production), CSP (frontend)
+- **Rate Limiting**: Webhooks (60/min), analytics (200/min), subscription setup/trial (30/min) per IP
+- **No Secrets in Frontend**: Only `NEXT_PUBLIC_*` env vars are exposed; service role key and Stripe secret are backend-only
+
+See [security.md](security.md) for a concise security overview and operational notes.
 
 ## Performance Optimizations
 

@@ -8,6 +8,7 @@ from uuid import UUID
 from datetime import date
 
 from app.core.auth import get_current_user
+from app.services.board_service import BoardService
 from app.services.featured_service import get_featured_service, FeaturedService
 from app.models.subscription import (
     FeaturedBookingCreate,
@@ -16,6 +17,12 @@ from app.models.subscription import (
 )
 
 router = APIRouter(prefix="/featured", tags=["featured"])
+
+
+def _ensure_board_in_region(board_id: UUID) -> None:
+    """Raise 404 if board is not in current region."""
+    if BoardService().get_by_id(board_id) is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Board not found")
 
 
 # ==================== Availability ====================
@@ -27,6 +34,7 @@ async def get_availability(
     current_user: Optional[dict] = Depends(get_current_user)
 ):
     """Get featured spot availability for a board."""
+    _ensure_board_in_region(board_id)
     service = get_featured_service()
     user_id = UUID(current_user["id"]) if current_user else None
     
@@ -43,6 +51,7 @@ async def check_date_availability(
     featured_date: str
 ):
     """Check if a specific date is available."""
+    _ensure_board_in_region(board_id)
     service = get_featured_service()
     
     try:
@@ -75,6 +84,7 @@ async def create_booking(
     Returns booking with client_secret for payment confirmation.
     Requires active subscription.
     """
+    _ensure_board_in_region(data.board_id)
     service = get_featured_service()
     user_id = UUID(current_user["id"])
     
@@ -160,6 +170,7 @@ async def cancel_booking(
 @router.get("/today/{board_id}")
 async def get_today_featured(board_id: UUID):
     """Get today's featured pin for a board."""
+    _ensure_board_in_region(board_id)
     service = get_featured_service()
     
     featured = service.get_today_featured_pin(board_id)

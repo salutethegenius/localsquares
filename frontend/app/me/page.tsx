@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createBrowserClient } from '@/lib/supabase'
 import SubscriptionCard from '@/components/SubscriptionCard'
 import FeaturedBooking from '@/components/FeaturedBooking'
+import { ALLOWED_ISLAND_SLUGS, APP_NAME } from '@/lib/brand'
 
 interface SubscriptionStatus {
   has_subscription: boolean
@@ -74,14 +75,17 @@ function MePageContent() {
 
         setUser(userData || authUser)
 
-        // Get user's pins
+        // Get user's pins (include board island for Freeport MVP filter)
         const { data: pinsData } = await supabase
           .from('pins')
-          .select('id, title, image_url, status, view_count, click_count, created_at, board_id, boards(slug, display_name)')
+          .select('id, title, image_url, status, view_count, click_count, created_at, board_id, boards(slug, display_name, island_id, islands(slug))')
           .eq('user_id', authUser.id)
           .order('created_at', { ascending: false })
 
-        setPins(pinsData || [])
+        const filtered = (pinsData || []).filter((p: any) =>
+          ALLOWED_ISLAND_SLUGS.length === 0 || (p.boards?.islands?.slug && ALLOWED_ISLAND_SLUGS.includes(p.boards.islands.slug))
+        )
+        setPins(filtered)
 
         // Fetch subscription status
         await fetchSubscriptionStatus(authUser.id)
@@ -256,10 +260,13 @@ function MePageContent() {
       if (authUser) {
         const { data: pinsData } = await supabase
           .from('pins')
-          .select('id, title, image_url, status, view_count, click_count, created_at, board_id, boards(slug, display_name)')
+          .select('id, title, image_url, status, view_count, click_count, created_at, board_id, boards(slug, display_name, island_id, islands(slug))')
           .eq('user_id', authUser.id)
           .order('created_at', { ascending: false })
-        setPins(pinsData || [])
+        const filtered = (pinsData || []).filter((p: any) =>
+          ALLOWED_ISLAND_SLUGS.length === 0 || (p.boards?.islands?.slug && ALLOWED_ISLAND_SLUGS.includes(p.boards.islands.slug))
+        )
+        setPins(filtered)
       }
     } catch (error) {
       console.error('Error updating pin status:', error)
@@ -287,10 +294,13 @@ function MePageContent() {
       if (authUser) {
         const { data: pinsData } = await supabase
           .from('pins')
-          .select('id, title, image_url, status, view_count, click_count, created_at, board_id, boards(slug, display_name)')
+          .select('id, title, image_url, status, view_count, click_count, created_at, board_id, boards(slug, display_name, island_id, islands(slug))')
           .eq('user_id', authUser.id)
           .order('created_at', { ascending: false })
-        setPins(pinsData || [])
+        const filtered = (pinsData || []).filter((p: any) =>
+          ALLOWED_ISLAND_SLUGS.length === 0 || (p.boards?.islands?.slug && ALLOWED_ISLAND_SLUGS.includes(p.boards.islands.slug))
+        )
+        setPins(filtered)
       }
     } catch (error) {
       console.error('Error deleting pin:', error)

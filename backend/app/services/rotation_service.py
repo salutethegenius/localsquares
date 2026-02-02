@@ -14,7 +14,12 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from app.core.database import get_supabase_client
+from app.services.board_service import BoardService
 from supabase import Client
+
+
+def _board_service() -> BoardService:
+    return BoardService()
 
 
 class RotationService:
@@ -48,6 +53,8 @@ class RotationService:
         Returns:
             List of pins sorted by weighted shuffle
         """
+        if _board_service().get_by_id(board_id) is None:
+            return []
         now = datetime.now(timezone.utc)
         today = now.date()
         

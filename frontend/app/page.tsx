@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
+import { APP_NAME, CITY_NAME, IS_FREEPORT_MVP } from '@/lib/brand'
 
 // Video file for hero background (compressed 720p)
 const HERO_VIDEO = '/videos/hero-video.mp4'
@@ -59,7 +60,7 @@ export default function LandingPage() {
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           <div className="mb-8 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
             <span className="w-2 h-2 bg-bahamian-yellow rounded-full animate-pulse" />
-            <span className="text-white/90 text-sm font-medium">Now live in The Bahamas</span>
+            <span className="text-white/90 text-sm font-medium">{IS_FREEPORT_MVP ? 'Now live in Freeport' : 'Now live in The Bahamas'}</span>
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-display text-white mb-6 leading-tight">
@@ -121,10 +122,12 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className={`text-center mb-16 transition-all duration-700 ${isVisible['value-props'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             <h2 className="text-3xl md:text-5xl font-display text-black mb-4">
-              Why <span className="text-bahamian-turquoise">LocalSquares</span>?
+              Why <span className="text-bahamian-turquoise">{APP_NAME}</span>?
             </h2>
             <p className="text-lg text-black/70 max-w-2xl mx-auto">
-              The easiest way for Bahamian businesses to get found by local customers.
+              {IS_FREEPORT_MVP
+                ? 'The easiest way for Freeport businesses to get found by local customers.'
+                : 'The easiest way for Bahamian businesses to get found by local customers.'}
             </p>
           </div>
 
@@ -201,8 +204,10 @@ export default function LandingPage() {
             {[
               {
                 step: '1',
-                title: 'Pick Your Island',
-                description: 'Choose New Providence, Grand Bahama, or your island. We cover the whole archipelago.',
+                title: IS_FREEPORT_MVP ? 'Pick Your Area' : 'Pick Your Island',
+                description: IS_FREEPORT_MVP
+                  ? 'Choose your Freeport neighborhood—Downtown, Lucaya, Eight Mile Rock, West End, and more.'
+                  : 'Choose New Providence, Grand Bahama, or your island. We cover the whole archipelago.',
                 icon: (
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -224,7 +229,9 @@ export default function LandingPage() {
               {
                 step: '3',
                 title: 'Get Discovered',
-                description: 'Locals find you when searching their area. From Bay Street to Carmichael, from Lucaya to Eight Mile Rock.',
+                description: IS_FREEPORT_MVP
+                  ? 'Locals find you when searching their area. From Downtown Freeport to Lucaya, from Eight Mile Rock to West End.'
+                  : 'Locals find you when searching their area. From Bay Street to Carmichael, from Lucaya to Eight Mile Rock.',
                 icon: (
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -284,8 +291,9 @@ export default function LandingPage() {
           </div>
           
           <blockquote className="text-2xl md:text-4xl font-display text-white mb-8 leading-relaxed">
-            &ldquo;From Bay Street to Carmichael Rd, from Port Lucaya to Eight Mile Rock &mdash; 
-            <span className="text-bahamian-yellow"> we&apos;re bringing areas together.</span>&rdquo;
+            {IS_FREEPORT_MVP
+              ? <>&ldquo;From Downtown Freeport to Lucaya, from Eight Mile Rock to West End &mdash; <span className="text-bahamian-yellow">we&apos;re bringing Freeport together.</span>&rdquo;</>
+              : <>&ldquo;From Bay Street to Carmichael Rd, from Port Lucaya to Eight Mile Rock &mdash; <span className="text-bahamian-yellow"> we&apos;re bringing areas together.</span>&rdquo;</>}
           </blockquote>
 
           <div className="flex flex-wrap justify-center gap-6 mt-12">
@@ -299,7 +307,7 @@ export default function LandingPage() {
               <svg className="w-5 h-5 text-bahamian-yellow" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
               </svg>
-              <span className="text-white text-sm">Made for Bahamians</span>
+              <span className="text-white text-sm">{IS_FREEPORT_MVP ? 'Made for Freeport' : 'Made for Bahamians'}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
               <svg className="w-5 h-5 text-bahamian-yellow" fill="currentColor" viewBox="0 0 24 24">
@@ -476,7 +484,7 @@ export default function LandingPage() {
           </h2>
           
           <p className="text-lg text-white/70 mb-10 max-w-xl mx-auto">
-            Join Bahamian businesses already connecting with their neighborhoods on LocalSquares.
+            Join {CITY_NAME} businesses already connecting with their neighborhoods on {APP_NAME}.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -506,7 +514,7 @@ export default function LandingPage() {
       <footer className="bg-black py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-white/50 text-sm">
-            &copy; {new Date().getFullYear()} LocalSquares. Made with love in The Bahamas.
+            &copy; {new Date().getFullYear()} {APP_NAME}. Made with love in {CITY_NAME}.
           </div>
           <div className="flex gap-6 text-white/50 text-sm">
             <Link href="/explore" className="hover:text-white transition-colors">Explore</Link>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { APP_NAME } from '@/lib/brand'
 
 interface PinViewProps {
   pin: {
@@ -50,7 +51,7 @@ export default function PinView({ pin }: PinViewProps) {
   const handleShare = async () => {
     const shareUrl = window.location.href
     const shareTitle = pin.title
-    const shareText = pin.caption || `Check out ${pin.title} on LocalSquares!`
+    const shareText = pin.caption || `Check out ${pin.title} on ${APP_NAME}!`
 
     // Track share click
     const { trackClick, getSessionId } = require('@/lib/analytics')

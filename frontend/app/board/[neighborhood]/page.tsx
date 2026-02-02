@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@/lib/supabase'
 import BoardGrid from '@/components/BoardGrid'
+import { ALLOWED_ISLAND_SLUGS, IS_FREEPORT_MVP } from '@/lib/brand'
 
 interface Island {
   id: string
@@ -43,20 +44,32 @@ export default function BoardPage() {
           .single()
 
         if (boardError) throw boardError
-        setBoard(boardData)
 
         // Fetch island if board has one
+        let islandData: Island | null = null
         if (boardData?.island_id) {
-          const { data: islandData } = await supabase
+          const { data } = await supabase
             .from('islands')
             .select('id, name, slug, display_name')
             .eq('id', boardData.island_id)
             .single()
-          
-          if (islandData) {
-            setIsland(islandData)
+          if (data) {
+            islandData = data
+            setIsland(data)
           }
         }
+
+        // Freeport MVP: only allow boards in the current region
+        if (IS_FREEPORT_MVP && ALLOWED_ISLAND_SLUGS.length > 0) {
+          const allowed = boardData.island_id && islandData && ALLOWED_ISLAND_SLUGS.includes(islandData.slug)
+          if (!allowed) {
+            setBoard(null)
+            setLoading(false)
+            return
+          }
+        }
+
+        setBoard(boardData)
       } catch (error) {
         console.error('Error fetching board:', error)
       } finally {

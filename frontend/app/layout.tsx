@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter_Tight } from 'next/font/google'
 import '../styles/globals.css'
 import { AuthProvider } from './providers'
+import { APP_NAME, APP_TAGLINE } from '@/lib/brand'
 
 const interTight = Inter_Tight({
   subsets: ['latin'],
@@ -13,8 +14,8 @@ const interTight = Inter_Tight({
 // For now, using Inter Tight as primary, with Satoshi available via CSS variable
 
 export const metadata: Metadata = {
-  title: 'LocalSquares - Your Neighborhood Billboards',
-  description: 'A visual neighborhood billboard platform for Nassau, Bahamas',
+  title: `${APP_NAME} - ${APP_TAGLINE}`,
+  description: 'A visual neighborhood billboard platform for Freeport and Grand Bahama. Pin your business, get discovered by locals.',
 }
 
 export default function RootLayout({

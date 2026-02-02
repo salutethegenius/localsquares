@@ -169,6 +169,18 @@ CLOUDFLARE_ACCOUNT_ID=xxx (optional)
 CLOUDFLARE_API_TOKEN=xxx (optional)
 ```
 
+## 4a. Security (Production)
+
+- **Debug mode**: Set `DEBUG=false` in production. When false, the API does not expose version or detailed error messages on the root endpoint, and JWT errors return a generic "Invalid token".
+- **CORS**: Set `CORS_ORIGINS` to only your trusted frontend origin(s) (e.g. `https://yourapp.vercel.app`). Do not use `*` with credentials.
+- **Secrets**: Never commit `.env` or real secrets to version control. Use your platform's secret storage (Vercel Environment Variables, Railway/Fly.io secrets). Rotate `SUPABASE_SERVICE_ROLE_KEY` and `STRIPE_WEBHOOK_SECRET` if they are ever exposed.
+- **Stripe webhooks**: When using Stripe, set `STRIPE_WEBHOOK_SECRET`; the webhook handler will reject requests with an invalid or missing signature.
+- **Health endpoint**: `/health` returns only `{"status": "healthy"}` and does not leak internal details.
+
+### Dependency audits
+
+Before releases, run `pip audit` in the backend directory and `npm audit` in the frontend directory. Fix or document any known vulnerabilities; pin dependency versions in `requirements.txt` and `package.json` for reproducible builds.
+
 ## 5. Database Migrations
 
 Run migrations in Supabase before deploying:

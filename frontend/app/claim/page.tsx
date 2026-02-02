@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import OnboardingFlow from '@/components/OnboardingFlow'
+import { APP_NAME } from '@/lib/brand'
 
 function OnboardingFlowWrapper() {
   return <OnboardingFlow />
@@ -31,7 +32,7 @@ export default function ClaimPage() {
             Get Your Business on the Board
           </h2>
           <p className="text-body-lg text-black/70">
-            Join local businesses showcasing their services. Quick setup, bold visibility.
+            Join Freeport businesses on {APP_NAME}. Quick setup, bold visibility.
           </p>
         </div>
 

@@ -110,11 +110,12 @@ async def get_current_user(
         )
         
     except InvalidTokenError as e:
-        # Log the error for debugging
-        logging.error(f"JWT decode error: {str(e)}")
+        logging.error("JWT decode error (details not exposed to client)")
+        if settings.debug:
+            logging.debug(str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}",
+            detail="Invalid token" if not settings.debug else str(e),
             headers={"WWW-Authenticate": "Bearer"},
         )
 

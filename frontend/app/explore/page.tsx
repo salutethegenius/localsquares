@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@/lib/supabase'
+import { APP_NAME, APP_TAGLINE, ALLOWED_ISLAND_SLUGS, IS_FREEPORT_MVP } from '@/lib/brand'
 
 interface Island {
   id: string
@@ -56,12 +57,22 @@ export default function ExplorePage() {
 
         if (fetchError) {
           console.error('Error fetching islands:', fetchError)
-          // Fallback: if islands table doesn't exist yet, load boards directly
           await fetchBoardsDirectly()
         } else if (data && data.length > 0) {
-          setIslands(data)
+          // Freeport MVP: only show allowed islands (e.g. Grand Bahama)
+          const filtered = ALLOWED_ISLAND_SLUGS.length > 0
+            ? data.filter((i: Island) => ALLOWED_ISLAND_SLUGS.includes(i.slug))
+            : data
+          if (filtered.length > 0) {
+            setIslands(filtered)
+            // If only one island (Freeport MVP), auto-select it so we load its boards
+            if (IS_FREEPORT_MVP && filtered.length === 1) {
+              setSelectedIsland(filtered[0])
+            }
+          } else {
+            await fetchBoardsDirectly()
+          }
         } else {
-          // No islands yet, load boards directly
           await fetchBoardsDirectly()
         }
       } catch (err) {
@@ -79,14 +90,20 @@ export default function ExplorePage() {
     async function fetchBoardsDirectly() {
       try {
         const supabase = createBrowserClient()
-        const { data } = await supabase
-          .from('boards')
-          .select('*')
-          .order('display_name')
-        
-        if (data) {
-          setBoards(data)
+        let query = supabase.from('boards').select('*').order('display_name')
+        // Freeport MVP: restrict to allowed island(s) via islands slug
+        if (ALLOWED_ISLAND_SLUGS.length > 0) {
+          const { data: islandRows } = await supabase
+            .from('islands')
+            .select('id')
+            .in('slug', ALLOWED_ISLAND_SLUGS)
+          const islandIds = (islandRows || []).map((r: { id: string }) => r.id)
+          if (islandIds.length > 0) {
+            query = query.in('island_id', islandIds)
+          }
         }
+        const { data } = await query
+        if (data) setBoards(data)
       } catch (err) {
         console.error('Error fetching boards:', err)
       }
@@ -137,10 +154,10 @@ export default function ExplorePage() {
       <header className="border-b-2 border-black bg-bahamian-turquoise py-6 px-4">
         <Link href="/" className="block">
           <h1 className="text-display-sm md:text-display-md text-white font-display text-center">
-            LocalSquares
+            {APP_NAME}
           </h1>
           <p className="text-body-md text-white/90 text-center mt-2">
-            Your Neighborhood Billboards
+            {APP_TAGLINE}
           </p>
         </Link>
       </header>
@@ -173,10 +190,10 @@ export default function ExplorePage() {
           <>
             <div className="text-center mb-12">
               <h2 className="text-display-sm md:text-display-md text-black font-display mb-4">
-                Choose Your Island
+                {IS_FREEPORT_MVP ? 'Freeport & Grand Bahama' : 'Choose Your Island'}
               </h2>
               <p className="text-body-lg text-black/70 max-w-2xl mx-auto">
-                Select your island to explore local businesses in your area.
+                {IS_FREEPORT_MVP ? 'Explore local businesses across Freeport and Grand Bahama.' : 'Select your island to explore local businesses in your area.'}
               </p>
             </div>
 
@@ -287,10 +304,10 @@ export default function ExplorePage() {
           <>
             <div className="text-center mb-12">
               <h2 className="text-display-sm md:text-display-md text-black font-display mb-4">
-                Choose Your Neighborhood
+                {IS_FREEPORT_MVP ? 'Freeport Neighborhoods' : 'Choose Your Neighborhood'}
               </h2>
               <p className="text-body-lg text-black/70 max-w-2xl mx-auto">
-                Explore local businesses and services. Tap a neighborhood to see what&apos;s happening.
+                {IS_FREEPORT_MVP ? 'Explore local businesses across Freeport and Grand Bahama.' : 'Explore local businesses and services. Tap a neighborhood to see what\'s happening.'}
               </p>
             </div>
 

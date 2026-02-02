@@ -5,6 +5,7 @@ Handles payment events from Stripe.
 from fastapi import APIRouter, Request, HTTPException, status, Header
 import stripe
 
+from app.core.rate_limit import limiter
 from app.services.stripe_service import get_stripe_service
 from app.services.subscription_service import get_subscription_service
 
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
 @router.post("/stripe")
+@limiter.limit("60/minute")
 async def stripe_webhook(
     request: Request,
     stripe_signature: str = Header(None, alias="Stripe-Signature")

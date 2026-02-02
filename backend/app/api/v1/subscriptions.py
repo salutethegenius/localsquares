@@ -2,11 +2,12 @@
 Subscription API endpoints for LocalSquares.
 Handles subscription management and Stripe integration.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from typing import Optional
 from uuid import UUID
 
 from app.core.auth import get_current_user
+from app.core.rate_limit import limiter
 from app.services.subscription_service import get_subscription_service, SubscriptionService
 from app.services.stripe_service import get_stripe_service, StripeService
 from app.models.subscription import (
@@ -84,7 +85,9 @@ async def get_subscription(
 
 
 @router.post("/trial", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("30/minute")
 async def start_trial(
+    request: Request,
     data: Optional[SubscriptionCreate] = None,
     current_user = Depends(get_current_user)
 ):
@@ -190,7 +193,9 @@ async def reactivate_subscription(
 # ==================== Payment Methods ====================
 
 @router.get("/setup-intent", response_model=SetupIntentResponse)
+@limiter.limit("30/minute")
 async def create_setup_intent(
+    request: Request,
     current_user = Depends(get_current_user)
 ):
     """

@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 
 class Settings(BaseSettings):
@@ -14,6 +14,17 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
     
+    # Region scope (e.g. freeport = only Grand Bahama/Freeport boards; unset = all islands)
+    region_scope: Optional[str] = "freeport"
+    current_island_slug: str = "grand-bahama"  # Island slug for filtering when region_scope is set
+
+    @property
+    def allowed_island_slugs(self) -> List[str]:
+        """When region_scope is 'freeport', only Grand Bahama boards are visible."""
+        if self.region_scope == "freeport":
+            return [self.current_island_slug]
+        return []  # empty = no filter (all islands)
+
     # CORS Configuration (can be comma-separated string or JSON array)
     cors_origins: Union[str, list[str]] = "http://localhost:3000,http://localhost:3001"
     
@@ -35,6 +46,8 @@ class Settings(BaseSettings):
     
     # Environment
     environment: str = "development"
+    # HSTS max-age in seconds (set in production; 0 disables)
+    hsts_max_age: int = 31536000  # 1 year when enabled
     
     @field_validator('cors_origins', mode='before')
     @classmethod

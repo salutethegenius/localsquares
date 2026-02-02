@@ -3,6 +3,7 @@ from typing import List, Optional
 from uuid import UUID
 from app.services.pin_service import PinService
 from app.services.rotation_service import get_rotation_service, RotationService
+from app.services.board_service import BoardService
 from app.models.pin import Pin, PinCreate, PinUpdate, PinWithSlot
 from app.core.auth import get_current_user, get_current_user_optional, CurrentUser
 
@@ -11,6 +12,12 @@ router = APIRouter(prefix="/pins", tags=["pins"])
 
 def get_pin_service() -> PinService:
     return PinService()
+
+
+def _ensure_board_in_region(board_id: UUID) -> None:
+    """Raise 404 if board is not in current region."""
+    if BoardService().get_by_id(board_id) is None:
+        raise HTTPException(status_code=404, detail="Board not found")
 
 
 @router.get("", response_model=List[Pin])
@@ -28,7 +35,8 @@ async def get_board_grid(
     board_id: UUID,
     service: PinService = Depends(get_pin_service)
 ):
-    """Get pins for a board grid with slot positions."""
+    """Get pins for a board grid with slot positions (404 if board not in region)."""
+    _ensure_board_in_region(board_id)
     return service.get_for_board_grid(board_id)
 
 
@@ -43,7 +51,9 @@ async def get_rotated_pins(
     Get pins for a board with fair rotation algorithm.
     Pass X-Session-ID header for personalized rotation.
     Featured pins appear in positions 1-4.
+    Returns 404 if board is not in current region.
     """
+    _ensure_board_in_region(board_id)
     rotation_service = get_rotation_service()
     return rotation_service.get_rotated_pins(
         board_id=board_id,
