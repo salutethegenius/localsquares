@@ -126,16 +126,30 @@ export async function updateUserProfile(updates: Partial<AuthUser>) {
   
   if (!user) throw new Error('Not authenticated')
 
+  // Build the upsert payload, only including email/phone if they exist
+  // This avoids issues with unique constraints on empty strings
+  const payload: Record<string, any> = {
+    id: user.id,
+    ...updates,
+  }
+  
+  // Only set email if it's a non-empty string
+  if (user.email && user.email.trim()) {
+    payload.email = user.email.trim()
+  }
+  
+  // Only set phone if it's a non-empty string  
+  if (user.phone && user.phone.trim()) {
+    payload.phone = user.phone.trim()
+  }
+
   const { data, error } = await supabase
     .from('users')
-    .upsert({
-      id: user.id,
-      email: user.email,
-      phone: user.phone,
-      ...updates,
-    }, {
+    .upsert(payload, {
       onConflict: 'id',
     })
+    .select()
+    .single()
 
   if (error) throw error
   return data

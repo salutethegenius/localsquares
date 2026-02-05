@@ -10,11 +10,18 @@ This guide covers setting up Supabase for LocalSquares, including authentication
 
 ## 2. Run Database Migrations
 
-1. Go to **SQL Editor** in your Supabase dashboard
-2. Run `backend/migrations/001_initial_schema.sql` first
-3. Then run `backend/migrations/002_rls_policies.sql`
+Supabase is connected via tools (Dashboard, CLI, or MCP). Run migrations in order using your connected tool:
 
-These migrations will create all tables, indexes, triggers, and RLS policies.
+1. **001** – `backend/migrations/001_initial_schema.sql` (tables, triggers)
+2. **002** – `backend/migrations/002_rls_policies.sql` (RLS)
+3. **003** – `backend/migrations/003_storage_policies.sql` (storage RLS)
+4. **004** – `backend/migrations/004_monetization_schema.sql` (subscriptions, featured_bookings, email_logs)
+5. **005** – `backend/migrations/005_islands_structure.sql` (islands, boards.island_id)
+6. **006** – `backend/migrations/006_fix_supabase_linter_issues.sql` (security/performance fixes)
+7. **007** – `backend/migrations/007_consolidate_multiple_permissive_policies.sql` (RLS consolidation)
+8. **008** – `backend/migrations/008_fix_assessment_leads_rls.sql` (optional; only if you have `assessment_leads`)
+
+See **backend/scripts/run_migrations.md** for full details and CLI options.
 
 ## 3. Configure Authentication
 

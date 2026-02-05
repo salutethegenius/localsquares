@@ -78,9 +78,7 @@ Backend will be available at `http://localhost:8000`
 
 ### 5. Run Database Migrations
 
-1. Go to Supabase Dashboard → SQL Editor
-2. Copy and run `backend/migrations/001_initial_schema.sql`
-3. Copy and run `backend/migrations/002_rls_policies.sql`
+With Supabase connected via tools (Dashboard, CLI, or MCP), run all migrations in order. See **[backend/scripts/run_migrations.md](../backend/scripts/run_migrations.md)** or **[supabase-setup.md](./supabase-setup.md)** for the full list (001 → 008) and how to run them via your connected tool.
 
 ## Development Workflow
 
@@ -171,9 +169,9 @@ CLOUDFLARE_API_TOKEN=xxx
 ### Create a New Migration
 
 1. Create file in `backend/migrations/`
-2. Name it `003_description.sql`
+2. Name it with the next number (e.g. `009_description.sql`)
 3. Add SQL statements
-4. Run in Supabase SQL Editor
+4. Run via your connected Supabase tool (Dashboard SQL Editor, CLI, or MCP)
 
 ### Add a New API Endpoint
 

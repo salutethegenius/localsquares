@@ -183,12 +183,7 @@ Before releases, run `pip audit` in the backend directory and `npm audit` in the
 
 ## 5. Database Migrations
 
-Run migrations in Supabase before deploying:
-
-1. Go to Supabase Dashboard → SQL Editor
-2. Run `backend/migrations/001_initial_schema.sql`
-3. Run `backend/migrations/002_rls_policies.sql`
-4. Verify tables are created
+With Supabase connected via tools (Dashboard, CLI, or MCP), run all migrations in order before deploying. See **backend/scripts/run_migrations.md** for the full list (001–008) and how to run them. Verify tables and RLS are in place after running.
 
 ## 6. Post-Deployment Checklist
 

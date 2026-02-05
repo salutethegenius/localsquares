@@ -2,15 +2,13 @@
 
 ## Step 1: Run Database Migrations
 
-1. Open your Supabase project: https://supabase.com/dashboard
-2. Go to **SQL Editor** → Click **New query**
-3. Copy and paste the contents of `backend/migrations/001_initial_schema.sql`
-4. Click **Run** (or press Cmd/Ctrl + Enter)
-5. Wait for success message
-6. Create a new query, copy and paste `backend/migrations/002_rls_policies.sql`
-7. Click **Run** again
+Supabase is connected via tools (Dashboard SQL Editor, CLI, or MCP). Run all migrations **in order** using your connected tool:
 
-**Verify**: Go to **Table Editor** - you should see: users, boards, pins, pin_slots, impressions, clicks, payments, reports
+1. Open your Supabase project (Dashboard → SQL Editor, or your connected tool).
+2. Run each file from `backend/migrations/` in order: **001** → **002** → **003** → **004** → **005** → **006** → **007** (and **008** only if you have `assessment_leads`).
+3. For full list and CLI options, see **backend/scripts/run_migrations.md**.
+
+**Verify**: Go to **Table Editor** — you should see: users, boards, pins, pin_slots, impressions, clicks, payments, reports, subscriptions, featured_bookings, email_logs, islands.
 
 ## Step 2: Create Storage Bucket
 

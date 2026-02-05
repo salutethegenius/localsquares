@@ -39,7 +39,7 @@ Copy `.env.example` to `.env` and fill in your values.
 
 3. **Run database migrations:**
 
-Apply migrations from `backend/migrations/` in your Supabase project.
+With Supabase connected via tools (Dashboard, CLI, or MCP), apply migrations from `backend/migrations/` in order (001 → 008). See **backend/scripts/run_migrations.md** for the list and how to run them.
 
 4. **Start development servers:**
 

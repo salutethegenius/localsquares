@@ -43,9 +43,11 @@ app = FastAPI(
     debug=settings.debug,
 )
 
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
+# Only enable rate limiting in production
+if settings.environment == "production":
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
 # Security headers (before CORS so they apply to all responses)
 app.add_middleware(SecurityHeadersMiddleware)

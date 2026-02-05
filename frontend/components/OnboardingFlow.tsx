@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
@@ -137,6 +137,10 @@ export default function OnboardingFlow() {
   const [step, setStep] = useState<Step>('auth')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saveTakingLong, setSaveTakingLong] = useState(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const saveSafetyRef = useRef<NodeJS.Timeout | null>(null)
+  const saveSafetyFiredRef = useRef(false)
 
   // Auth state
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email')
@@ -403,7 +407,7 @@ export default function OnboardingFlow() {
       await signInWithEmail(email, `${window.location.origin}/claim?step=business`)
       setConfirmationSent('email')
     } catch (err: any) {
-      setError(err.message || 'Failed to send magic link')
+      setError(err.message || 'Failed to authenticate')
     } finally {
       setLoading(false)
     }
@@ -463,8 +467,27 @@ export default function OnboardingFlow() {
 
   const handleBusinessInfo = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent double-submission
+    if (loading) return
+    
     setLoading(true)
     setError(null)
+    setSaveTakingLong(false)
+    saveSafetyFiredRef.current = false
+    // Clear any previous safety/timeout timers
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    if (saveSafetyRef.current) clearTimeout(saveSafetyRef.current)
+
+    // Show "taking longer" after 3s so user knows the app didn't freeze
+    saveTimeoutRef.current = setTimeout(() => setSaveTakingLong(true), 3000)
+    // Safety net: force-unstick after 15s even if Promise.race doesn't settle (e.g. tab backgrounded)
+    saveSafetyRef.current = setTimeout(() => {
+      saveSafetyFiredRef.current = true
+      setLoading(false)
+      setSaveTakingLong(false)
+      setError('Save took too long. Please check your connection and try again.')
+    }, 15000)
 
     try {
       // Check Supabase configuration
@@ -512,7 +535,6 @@ export default function OnboardingFlow() {
       // Use the utility function which handles upsert properly
       const { updateUserProfile } = await import('@/lib/auth')
       
-      // Create a promise with timeout
       const savePromise = updateUserProfile({
         full_name: fullName.trim(),
         business_name: businessName.trim(),
@@ -520,17 +542,34 @@ export default function OnboardingFlow() {
       })
 
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Save operation timed out after 15 seconds. This usually means the database request is not completing. Check your Supabase connection and RLS policies.')), 15000)
+        setTimeout(() => reject(new Error('Save operation timed out. Please check your connection and try again.')), 8000)
       })
 
-      await Promise.race([savePromise, timeoutPromise])
+      try {
+        await Promise.race([savePromise, timeoutPromise])
+      } catch (raceError: any) {
+        // Re-throw with more context
+        if (raceError.message?.includes('timed out')) {
+          throw raceError
+        }
+        // If it's a constraint violation, provide helpful message
+        if (raceError.message?.includes('duplicate') || raceError.message?.includes('unique') || raceError.code === '23505') {
+          throw new Error('This account may already exist. Please try signing in instead.')
+        }
+        throw raceError
+      }
 
-      // Success! Move to payment step
+      if (saveSafetyFiredRef.current) return
+      if (saveSafetyRef.current) clearTimeout(saveSafetyRef.current)
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      setSaveTakingLong(false)
       setStep('payment')
     } catch (err: any) {
+      if (saveSafetyRef.current) clearTimeout(saveSafetyRef.current)
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      setSaveTakingLong(false)
       console.error('Error in handleBusinessInfo:', err)
       
-      // Provide more helpful error messages
       let errorMessage = 'Failed to save business info. '
       if (err.message) {
         if (err.message.includes('not configured') || err.message.includes('environment variables')) {
@@ -721,7 +760,7 @@ export default function OnboardingFlow() {
           {/* Auth Method Toggle */}
           <div className="flex gap-4 mb-6">
             <button
-              onClick={() => setAuthMethod('email')}
+              onClick={() => { setAuthMethod('email'); setError(null); }}
               className={`flex-1 py-3 px-4 font-bold text-headline-sm rounded-sign border-2 transition-colors ${
                 authMethod === 'email'
                   ? 'bg-bahamian-turquoise text-white border-bahamian-turquoise'
@@ -731,20 +770,17 @@ export default function OnboardingFlow() {
               Email
             </button>
             <button
-              onClick={() => setAuthMethod('phone')}
-              className={`flex-1 py-3 px-4 font-bold text-headline-sm rounded-sign border-2 transition-colors ${
-                authMethod === 'phone'
-                  ? 'bg-bahamian-turquoise text-white border-bahamian-turquoise'
-                  : 'bg-white text-black border-black'
-              }`}
+              type="button"
+              disabled
+              className="flex-1 py-3 px-4 font-bold text-headline-sm rounded-sign border-2 bg-gray-100 text-black/40 border-gray-300 cursor-not-allowed"
             >
-              Phone
+              Phone (coming soon)
             </button>
           </div>
 
           {authMethod === 'email' ? (
             <form onSubmit={handleEmailAuth}>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-body-md font-bold text-black mb-2">
                   Email Address
                 </label>
@@ -757,12 +793,13 @@ export default function OnboardingFlow() {
                   placeholder="your@email.com"
                 />
               </div>
+              <div className="mb-6"></div>
               <button
                 type="submit"
                 disabled={loading}
                 className="btn-primary w-full"
               >
-                {loading ? 'Sending...' : 'Send Magic Link'}
+                {loading ? 'Signing in...' : 'Send Magic Link'}
               </button>
             </form>
           ) : (
@@ -936,6 +973,16 @@ export default function OnboardingFlow() {
             >
               {loading ? 'Saving...' : 'Continue'}
             </button>
+            {saveTakingLong && loading && (
+              <p className="mt-4 text-body-sm text-black/70 text-center">
+                This is taking longer than usual. Check your connection — you can try again or refresh the page.
+              </p>
+            )}
+            {error && step === 'business' && (
+              <div className="mt-4 p-4 bg-red-100 border-2 border-red-500 text-red-700 rounded-card text-body-sm">
+                {error}
+              </div>
+            )}
           </form>
         </div>
       )}
