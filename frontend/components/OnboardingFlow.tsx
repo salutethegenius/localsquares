@@ -147,6 +147,7 @@ export default function OnboardingFlow() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [confirmationSent, setConfirmationSent] = useState<AuthConfirmation>(null)
+  const [emailResendCooldown, setEmailResendCooldown] = useState(0)
   
   // OTP state for phone auth
   const [showOtpInput, setShowOtpInput] = useState(false)
@@ -193,6 +194,15 @@ export default function OnboardingFlow() {
   const [loadingSetupIntent, setLoadingSetupIntent] = useState(false)
 
   const supabase = createBrowserClient()
+
+  // Cooldown timer for email resend to avoid hammering Supabase
+  useEffect(() => {
+    if (emailResendCooldown <= 0) return
+    const timer = setInterval(() => {
+      setEmailResendCooldown((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [emailResendCooldown])
 
   // Check URL params and auth state on mount, and listen for auth changes
   useEffect(() => {
@@ -406,8 +416,20 @@ export default function OnboardingFlow() {
       const { signInWithEmail } = await import('@/lib/auth')
       await signInWithEmail(email, `${window.location.origin}/claim?step=business`)
       setConfirmationSent('email')
+      // Start cooldown to reduce likelihood of Supabase rate limiting
+      setEmailResendCooldown(60)
     } catch (err: any) {
-      setError(err.message || 'Failed to authenticate')
+      const message = err?.message || 'Failed to authenticate'
+      if (
+        message.toLowerCase().includes('rate') ||
+        message.toLowerCase().includes('too many') ||
+        message.toLowerCase().includes('many requests') ||
+        message.toLowerCase().includes('otp requests')
+      ) {
+        setError('You requested too many links. Please wait a minute before trying again.')
+      } else {
+        setError(message)
+      }
     } finally {
       setLoading(false)
     }
@@ -447,6 +469,9 @@ export default function OnboardingFlow() {
   }
 
   const handleResendCode = async () => {
+    // Respect cooldown for email magic links
+    if (confirmationSent === 'email' && emailResendCooldown > 0) return
+
     setLoading(true)
     setError(null)
 
@@ -454,12 +479,23 @@ export default function OnboardingFlow() {
       if (confirmationSent === 'email') {
         const { signInWithEmail } = await import('@/lib/auth')
         await signInWithEmail(email, `${window.location.origin}/claim?step=business`)
+        setEmailResendCooldown(60)
       } else if (confirmationSent === 'phone') {
         const { signInWithPhone } = await import('@/lib/auth')
         await signInWithPhone(phone)
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to resend code')
+      const message = err?.message || 'Failed to resend code'
+      if (
+        message.toLowerCase().includes('rate') ||
+        message.toLowerCase().includes('too many') ||
+        message.toLowerCase().includes('many requests') ||
+        message.toLowerCase().includes('otp requests')
+      ) {
+        setError('You requested too many links. Please wait a minute before trying again.')
+      } else {
+        setError(message)
+      }
     } finally {
       setLoading(false)
     }
@@ -911,10 +947,14 @@ export default function OnboardingFlow() {
           
           <button
             onClick={handleResendCode}
-            disabled={loading}
+            disabled={loading || (confirmationSent === 'email' && emailResendCooldown > 0)}
             className="block mx-auto mt-6 text-body-md text-bahamian-turquoise font-bold hover:underline"
           >
-            {loading ? 'Sending...' : "Didn't receive it? Resend"}
+            {loading
+              ? 'Sending...'
+              : confirmationSent === 'email' && emailResendCooldown > 0
+              ? `Resend in ${emailResendCooldown}s`
+              : "Didn't receive it? Resend"}
           </button>
           <button
             onClick={() => {
