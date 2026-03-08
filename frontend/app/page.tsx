@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { APP_NAME, CITY_NAME, IS_FREEPORT_MVP } from '@/lib/brand'
+import SiteHeader from '@/components/SiteHeader'
 
-// Video file for hero background (compressed 720p)
 const HERO_VIDEO = '/videos/hero-video.mp4'
 
 export default function LandingPage() {
@@ -37,6 +37,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
+      <SiteHeader />
+
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Video Background */}

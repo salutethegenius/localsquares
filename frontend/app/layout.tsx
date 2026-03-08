@@ -1,8 +1,20 @@
 import type { Metadata } from 'next'
 import { Inter_Tight } from 'next/font/google'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import '../styles/globals.css'
 import { AuthProvider } from './providers'
 import { APP_NAME, APP_TAGLINE } from '@/lib/brand'
+import * as Sentry from '@sentry/nextjs'
+
+export function generateMetadata(): Metadata {
+  return {
+    title: `${APP_NAME} - ${APP_TAGLINE}`,
+    description: 'A visual neighborhood billboard platform for Freeport and Grand Bahama. Pin your business, get discovered by locals.',
+    other: {
+      ...Sentry.getTraceData(),
+    },
+  }
+}
 
 const interTight = Inter_Tight({
   subsets: ['latin'],
@@ -12,11 +24,6 @@ const interTight = Inter_Tight({
 
 // Note: Satoshi font should be loaded via Next.js font loader or CDN
 // For now, using Inter Tight as primary, with Satoshi available via CSS variable
-
-export const metadata: Metadata = {
-  title: `${APP_NAME} - ${APP_TAGLINE}`,
-  description: 'A visual neighborhood billboard platform for Freeport and Grand Bahama. Pin your business, get discovered by locals.',
-}
 
 export default function RootLayout({
   children,
@@ -41,6 +48,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
