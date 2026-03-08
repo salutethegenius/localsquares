@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID=${NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID}
+      - NEXT_PUBLIC_REGION_SCOPE=${NEXT_PUBLIC_REGION_SCOPE:-freeport}
+    depends_on:
+      - backend
+
   backend:
     build:
       context: ./backend
