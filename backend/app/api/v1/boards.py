@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 from uuid import UUID
 from app.services.board_service import BoardService
@@ -15,7 +15,7 @@ def get_board_service() -> BoardService:
 
 @router.get("", response_model=List[Board])
 @limiter.limit("120/minute")
-async def list_boards(service: BoardService = Depends(get_board_service)):
+async def list_boards(request: Request, service: BoardService = Depends(get_board_service)):
     """Get all boards."""
     return service.get_all()
 
@@ -23,6 +23,7 @@ async def list_boards(service: BoardService = Depends(get_board_service)):
 @router.get("/{board_id}", response_model=Board)
 @limiter.limit("120/minute")
 async def get_board(
+    request: Request,
     board_id: UUID,
     service: BoardService = Depends(get_board_service)
 ):
@@ -36,6 +37,7 @@ async def get_board(
 @router.get("/slug/{slug}", response_model=Board)
 @limiter.limit("120/minute")
 async def get_board_by_slug(
+    request: Request,
     slug: str,
     service: BoardService = Depends(get_board_service)
 ):
@@ -49,6 +51,7 @@ async def get_board_by_slug(
 @router.post("", response_model=Board, status_code=201)
 @limiter.limit("30/minute")
 async def create_board(
+    request: Request,
     board: BoardCreate,
     admin: CurrentUser = Depends(require_admin),
     service: BoardService = Depends(get_board_service)
@@ -60,6 +63,7 @@ async def create_board(
 @router.patch("/{board_id}", response_model=Board)
 @limiter.limit("30/minute")
 async def update_board(
+    request: Request,
     board_id: UUID,
     board_update: BoardUpdate,
     admin: CurrentUser = Depends(require_admin),
@@ -75,6 +79,7 @@ async def update_board(
 @router.delete("/{board_id}", status_code=204)
 @limiter.limit("30/minute")
 async def delete_board(
+    request: Request,
     board_id: UUID,
     admin: CurrentUser = Depends(require_admin),
     service: BoardService = Depends(get_board_service)

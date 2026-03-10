@@ -24,6 +24,7 @@ def _ensure_board_in_region(board_id: UUID) -> None:
 @router.get("", response_model=List[Pin])
 @limiter.limit("120/minute")
 async def list_pins(
+    request: Request,
     board_id: Optional[UUID] = Query(None, description="Filter by board ID"),
     status: Optional[str] = Query(None, description="Filter by status"),
     service: PinService = Depends(get_pin_service)
@@ -35,6 +36,7 @@ async def list_pins(
 @router.get("/board/{board_id}/grid", response_model=List[PinWithSlot])
 @limiter.limit("120/minute")
 async def get_board_grid(
+    request: Request,
     board_id: UUID,
     service: PinService = Depends(get_pin_service)
 ):
@@ -69,6 +71,7 @@ async def get_rotated_pins(
 @router.get("/{pin_id}", response_model=Pin)
 @limiter.limit("120/minute")
 async def get_pin(
+    request: Request,
     pin_id: UUID,
     service: PinService = Depends(get_pin_service)
 ):
@@ -82,6 +85,7 @@ async def get_pin(
 @router.post("", response_model=Pin, status_code=201)
 @limiter.limit("30/minute")
 async def create_pin(
+    request: Request,
     pin: PinCreate,
     current_user: CurrentUser = Depends(get_current_user),
     service: PinService = Depends(get_pin_service)
@@ -93,13 +97,13 @@ async def create_pin(
 @router.patch("/{pin_id}", response_model=Pin)
 @limiter.limit("30/minute")
 async def update_pin(
+    request: Request,
     pin_id: UUID,
     pin_update: PinUpdate,
     current_user: CurrentUser = Depends(get_current_user),
     service: PinService = Depends(get_pin_service)
 ):
     """Update a pin. Must be the owner or admin."""
-    # Admins can update any pin
     user_id = None if current_user.role == "admin" else current_user.id
     pin = service.update(pin_id, pin_update, user_id)
     if not pin:
@@ -110,12 +114,12 @@ async def update_pin(
 @router.delete("/{pin_id}", status_code=204)
 @limiter.limit("30/minute")
 async def delete_pin(
+    request: Request,
     pin_id: UUID,
     current_user: CurrentUser = Depends(get_current_user),
     service: PinService = Depends(get_pin_service)
 ):
     """Delete a pin. Must be the owner or admin."""
-    # Admins can delete any pin
     user_id = None if current_user.role == "admin" else current_user.id
     success = service.delete(pin_id, user_id)
     if not success:

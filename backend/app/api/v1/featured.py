@@ -2,7 +2,7 @@
 Featured Booking API endpoints for LocalSquares.
 Handles featured spot bookings.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from typing import List, Optional
 from uuid import UUID
 from datetime import date
@@ -31,6 +31,7 @@ def _ensure_board_in_region(board_id: UUID) -> None:
 @router.get("/availability/{board_id}", response_model=List[FeaturedAvailability])
 @limiter.limit("120/minute")
 async def get_availability(
+    request: Request,
     board_id: UUID,
     days: int = Query(14, ge=1, le=30),
     current_user: Optional[dict] = Depends(get_current_user)
@@ -50,6 +51,7 @@ async def get_availability(
 @router.get("/check/{board_id}/{featured_date}")
 @limiter.limit("120/minute")
 async def check_date_availability(
+    request: Request,
     board_id: UUID,
     featured_date: str
 ):
@@ -79,6 +81,7 @@ async def check_date_availability(
 @router.post("/book", status_code=status.HTTP_201_CREATED)
 @limiter.limit("30/minute")
 async def create_booking(
+    request: Request,
     data: FeaturedBookingCreate,
     current_user: dict = Depends(get_current_user)
 ):
@@ -119,6 +122,7 @@ async def create_booking(
 @router.post("/confirm/{booking_id}", response_model=FeaturedBookingResponse)
 @limiter.limit("30/minute")
 async def confirm_booking(
+    request: Request,
     booking_id: UUID,
     current_user: dict = Depends(get_current_user)
 ):
@@ -141,6 +145,7 @@ async def confirm_booking(
 @router.get("/my-bookings", response_model=List[FeaturedBookingResponse])
 @limiter.limit("60/minute")
 async def get_my_bookings(
+    request: Request,
     include_past: bool = Query(False),
     current_user: dict = Depends(get_current_user)
 ):
@@ -156,6 +161,7 @@ async def get_my_bookings(
 @router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit("30/minute")
 async def cancel_booking(
+    request: Request,
     booking_id: UUID,
     current_user: dict = Depends(get_current_user)
 ):
@@ -176,7 +182,7 @@ async def cancel_booking(
 
 @router.get("/today/{board_id}")
 @limiter.limit("120/minute")
-async def get_today_featured(board_id: UUID):
+async def get_today_featured(request: Request, board_id: UUID):
     """Get today's featured pin for a board."""
     _ensure_board_in_region(board_id)
     service = get_featured_service()
@@ -188,5 +194,3 @@ async def get_today_featured(board_id: UUID):
         "has_featured": featured is not None,
         "pin": featured
     }
-
-
