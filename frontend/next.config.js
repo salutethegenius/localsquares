@@ -32,9 +32,11 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
-              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.stripe.com",
+              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://api.stripe.com https://*.railway.app",
               "img-src 'self' data: https: blob:",
               "style-src 'self' 'unsafe-inline'",
+              "form-action 'self'",
+              "base-uri 'self'",
               "frame-src https://js.stripe.com https://hooks.stripe.com",
             ].join('; '),
           },

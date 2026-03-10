@@ -6,6 +6,7 @@ from app.services.rotation_service import get_rotation_service, RotationService
 from app.services.board_service import BoardService
 from app.models.pin import Pin, PinCreate, PinUpdate, PinWithSlot
 from app.core.auth import get_current_user, get_current_user_optional, CurrentUser
+from app.core.rate_limit import limiter
 
 router = APIRouter(prefix="/pins", tags=["pins"])
 
@@ -21,6 +22,7 @@ def _ensure_board_in_region(board_id: UUID) -> None:
 
 
 @router.get("", response_model=List[Pin])
+@limiter.limit("120/minute")
 async def list_pins(
     board_id: Optional[UUID] = Query(None, description="Filter by board ID"),
     status: Optional[str] = Query(None, description="Filter by status"),
@@ -31,6 +33,7 @@ async def list_pins(
 
 
 @router.get("/board/{board_id}/grid", response_model=List[PinWithSlot])
+@limiter.limit("120/minute")
 async def get_board_grid(
     board_id: UUID,
     service: PinService = Depends(get_pin_service)
@@ -41,6 +44,7 @@ async def get_board_grid(
 
 
 @router.get("/board/{board_id}/rotated")
+@limiter.limit("120/minute")
 async def get_rotated_pins(
     board_id: UUID,
     request: Request,
@@ -63,6 +67,7 @@ async def get_rotated_pins(
 
 
 @router.get("/{pin_id}", response_model=Pin)
+@limiter.limit("120/minute")
 async def get_pin(
     pin_id: UUID,
     service: PinService = Depends(get_pin_service)
@@ -75,6 +80,7 @@ async def get_pin(
 
 
 @router.post("", response_model=Pin, status_code=201)
+@limiter.limit("30/minute")
 async def create_pin(
     pin: PinCreate,
     current_user: CurrentUser = Depends(get_current_user),
@@ -85,6 +91,7 @@ async def create_pin(
 
 
 @router.patch("/{pin_id}", response_model=Pin)
+@limiter.limit("30/minute")
 async def update_pin(
     pin_id: UUID,
     pin_update: PinUpdate,
@@ -101,6 +108,7 @@ async def update_pin(
 
 
 @router.delete("/{pin_id}", status_code=204)
+@limiter.limit("30/minute")
 async def delete_pin(
     pin_id: UUID,
     current_user: CurrentUser = Depends(get_current_user),

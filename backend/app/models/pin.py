@@ -3,6 +3,8 @@ from typing import Optional
 from datetime import datetime
 from uuid import UUID
 
+from app.core.sanitize import sanitize_string, sanitize_html
+
 # Max sizes for metadata (security: prevent oversized payloads)
 METADATA_STR_VALUE_MAX = 500
 METADATA_TAGS_MAX_ITEMS = 20
@@ -60,6 +62,29 @@ class PinBase(BaseModel):
     thumbnail_url: Optional[str] = None
     metadata: Optional[PinMetadata] = Field(default_factory=PinMetadata)
     featured: bool = Field(default=False, description="Whether pin is featured")
+
+    @field_validator("title")
+    @classmethod
+    def sanitize_title(cls, v: str) -> str:
+        cleaned = sanitize_html(v, max_length=100)
+        if not cleaned:
+            raise ValueError("Title cannot be empty")
+        return cleaned
+
+    @field_validator("caption")
+    @classmethod
+    def sanitize_caption(cls, v: Optional[str]) -> Optional[str]:
+        return sanitize_html(v, max_length=200)
+
+    @field_validator("image_url", "thumbnail_url")
+    @classmethod
+    def validate_image_url(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return v
+        v = v.strip()
+        if not (v.startswith("https://")):
+            raise ValueError("Image URLs must use HTTPS")
+        return v
 
 
 class PinCreate(PinBase):

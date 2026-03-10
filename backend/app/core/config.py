@@ -49,6 +49,17 @@ class Settings(BaseSettings):
     # HSTS max-age in seconds (set in production; 0 disables)
     hsts_max_age: int = 31536000  # 1 year when enabled
     
+    # Rate limiting / storage (optional Redis backing store)
+    redis_url: Optional[str] = None
+    
+    # Firewall configuration
+    blocked_ips: Optional[str] = None  # Comma-separated list of blocked IPs
+    max_request_body_size: Optional[int] = 10 * 1024 * 1024  # 10MB default
+    
+    # Proxy / edge network configuration
+    require_cloudflare_proxy: bool = False
+    trusted_proxies: Optional[str] = None  # Comma-separated list/ranges of trusted proxy IPs
+    
     @field_validator('cors_origins', mode='before')
     @classmethod
     def parse_cors_origins(cls, v):

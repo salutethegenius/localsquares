@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class SubscriptionBase(BaseModel):
@@ -10,11 +10,24 @@ class SubscriptionBase(BaseModel):
     plan: str = Field(..., pattern="^(trial|monthly|annual)$")
 
 
+from app.core.sanitize import sanitize_string
+
+
 class SubscriptionCreate(BaseModel):
     """Request to start a trial subscription."""
     payment_method_id: str = Field(..., description="Stripe payment method ID")
     name: Optional[str] = Field(None, description="Business/user name")
     phone: Optional[str] = Field(None, description="Phone number")
+
+    @field_validator("name")
+    @classmethod
+    def sanitize_name(cls, v: Optional[str]) -> Optional[str]:
+        return sanitize_string(v, max_length=200)
+
+    @field_validator("phone")
+    @classmethod
+    def sanitize_phone(cls, v: Optional[str]) -> Optional[str]:
+        return sanitize_string(v, max_length=50)
 
 
 class SubscriptionResponse(BaseModel):

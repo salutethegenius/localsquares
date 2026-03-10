@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
+
+from app.core.sanitize import sanitize_string, sanitize_html
 
 
 class BoardBase(BaseModel):
@@ -11,6 +13,19 @@ class BoardBase(BaseModel):
     description: Optional[str] = None
     grid_cols: int = Field(default=3, ge=1, le=6, description="Number of grid columns")
     metadata: Optional[dict] = Field(default_factory=dict, description="Flexible metadata")
+
+    @field_validator("neighborhood", "slug", "display_name")
+    @classmethod
+    def sanitize_text_fields(cls, v: str) -> str:
+        cleaned = sanitize_html(v, max_length=100)
+        if not cleaned:
+            raise ValueError("Field cannot be empty")
+        return cleaned
+
+    @field_validator("description")
+    @classmethod
+    def sanitize_description(cls, v: Optional[str]) -> Optional[str]:
+        return sanitize_string(v, max_length=500)
 
 
 class BoardCreate(BoardBase):

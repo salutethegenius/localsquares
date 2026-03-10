@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import SubscriptionCard from '@/components/SubscriptionCard'
 import FeaturedBooking from '@/components/FeaturedBooking'
 import { ALLOWED_ISLAND_SLUGS, APP_NAME } from '@/lib/brand'
@@ -181,7 +182,7 @@ function MePageContent() {
         return
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/subscriptions/cancel`, {
+      const response = await apiFetch('/api/v1/subscriptions/cancel', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -213,7 +214,7 @@ function MePageContent() {
         return
       }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/subscriptions/reactivate`, {
+      const response = await apiFetch('/api/v1/subscriptions/reactivate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

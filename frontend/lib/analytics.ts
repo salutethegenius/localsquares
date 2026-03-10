@@ -1,13 +1,12 @@
 // Lightweight analytics tracking client
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+import { apiFetch } from './api'
 
 export async function trackImpression(pinId: string, boardId: string, sessionId?: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/analytics/impressions`, {
+    const response = await apiFetch('/api/v1/analytics/impressions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         pin_id: pinId,
@@ -32,10 +31,9 @@ export async function trackClick(
   sessionId?: string
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/analytics/clicks`, {
+    const response = await apiFetch('/api/v1/analytics/clicks', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         pin_id: pinId,

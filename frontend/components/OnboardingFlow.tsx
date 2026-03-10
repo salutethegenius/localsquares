@@ -6,6 +6,7 @@ import { createBrowserClient } from '@/lib/supabase'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { getStripe, formatCurrency, PLANS } from '@/lib/stripe'
 import { ALLOWED_ISLAND_SLUGS, IS_FREEPORT_MVP } from '@/lib/brand'
+import { apiFetch } from '@/lib/api'
 
 type Step = 'auth' | 'business' | 'payment' | 'pin'
 type AuthConfirmation = 'email' | 'phone' | null
@@ -334,7 +335,7 @@ export default function OnboardingFlow() {
             return
           }
           
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/subscriptions/setup-intent`, {
+          const response = await apiFetch('/api/v1/subscriptions/setup-intent', {
             headers: {
               'Authorization': `Bearer ${session.access_token}`,
             },
@@ -722,7 +723,7 @@ export default function OnboardingFlow() {
       }
 
       // Call backend to create trial subscription
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/subscriptions/trial`, {
+      const response = await apiFetch('/api/v1/subscriptions/trial', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

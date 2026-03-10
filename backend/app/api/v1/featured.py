@@ -15,6 +15,7 @@ from app.models.subscription import (
     FeaturedBookingResponse,
     FeaturedAvailability
 )
+from app.core.rate_limit import limiter
 
 router = APIRouter(prefix="/featured", tags=["featured"])
 
@@ -28,6 +29,7 @@ def _ensure_board_in_region(board_id: UUID) -> None:
 # ==================== Availability ====================
 
 @router.get("/availability/{board_id}", response_model=List[FeaturedAvailability])
+@limiter.limit("120/minute")
 async def get_availability(
     board_id: UUID,
     days: int = Query(14, ge=1, le=30),
@@ -46,6 +48,7 @@ async def get_availability(
 
 
 @router.get("/check/{board_id}/{featured_date}")
+@limiter.limit("120/minute")
 async def check_date_availability(
     board_id: UUID,
     featured_date: str
@@ -74,6 +77,7 @@ async def check_date_availability(
 # ==================== Booking ====================
 
 @router.post("/book", status_code=status.HTTP_201_CREATED)
+@limiter.limit("30/minute")
 async def create_booking(
     data: FeaturedBookingCreate,
     current_user: dict = Depends(get_current_user)
@@ -113,6 +117,7 @@ async def create_booking(
 
 
 @router.post("/confirm/{booking_id}", response_model=FeaturedBookingResponse)
+@limiter.limit("30/minute")
 async def confirm_booking(
     booking_id: UUID,
     current_user: dict = Depends(get_current_user)
@@ -134,6 +139,7 @@ async def confirm_booking(
 # ==================== User Bookings ====================
 
 @router.get("/my-bookings", response_model=List[FeaturedBookingResponse])
+@limiter.limit("60/minute")
 async def get_my_bookings(
     include_past: bool = Query(False),
     current_user: dict = Depends(get_current_user)
@@ -148,6 +154,7 @@ async def get_my_bookings(
 
 
 @router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("30/minute")
 async def cancel_booking(
     booking_id: UUID,
     current_user: dict = Depends(get_current_user)
@@ -168,6 +175,7 @@ async def cancel_booking(
 # ==================== Board Featured ====================
 
 @router.get("/today/{board_id}")
+@limiter.limit("120/minute")
 async def get_today_featured(board_id: UUID):
     """Get today's featured pin for a board."""
     _ensure_board_in_region(board_id)

@@ -9,6 +9,8 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.config import settings
 from app.core.rate_limit import limiter
+from app.middleware.firewall import FirewallMiddleware
+from app.middleware.csrf import CSRFMiddleware
 from app.api.v1 import api_router
 
 # Allowed CORS methods and headers (explicit list to reduce surface)
@@ -20,6 +22,7 @@ CORS_ALLOW_HEADERS = [
     "Origin",
     "X-Session-ID",
     "Stripe-Signature",
+    "X-CSRF-Token",
 ]
 
 
@@ -30,6 +33,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
+        # Modern best practice: disable old XSS auditor and rely on CSP
+        response.headers["X-XSS-Protection"] = "0"
         if settings.environment == "production" and getattr(settings, "hsts_max_age", 0) > 0:
             response.headers["Strict-Transport-Security"] = (
                 f"max-age={settings.hsts_max_age}; includeSubDomains"
@@ -43,19 +48,33 @@ app = FastAPI(
     debug=settings.debug,
 )
 
-# Only enable rate limiting in production
-if settings.environment == "production":
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-    app.add_middleware(SlowAPIMiddleware)
+# Firewall should be early in the chain
+app.add_middleware(FirewallMiddleware)
+
+# CSRF protection for browser-originating state-changing requests
+app.add_middleware(CSRFMiddleware)
+
+# Rate limiting (enabled in all environments; use higher env thresholds in dev via env config)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Security headers (before CORS so they apply to all responses)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS middleware
+if settings.environment == "production":
+    # In production, lock CORS to the public frontend domains
+    allow_origins = [
+        "https://freeportsquares.com",
+        "https://www.freeportsquares.com",
+    ]
+else:
+    allow_origins = settings.cors_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=CORS_ALLOW_METHODS,
     allow_headers=CORS_ALLOW_HEADERS,
