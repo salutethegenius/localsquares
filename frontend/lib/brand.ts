@@ -4,7 +4,7 @@
  * Set NEXT_PUBLIC_REGION_SCOPE=freeport (default for this build) or leave unset/other for multi-region.
  */
 
-const regionScope = process.env.NEXT_PUBLIC_REGION_SCOPE ?? 'freeport'
+const regionScope = process.env.NEXT_PUBLIC_REGION_SCOPE || 'freeport'
 
 export const REGION_SCOPE = regionScope
 export const IS_FREEPORT_MVP = regionScope === 'freeport'
@@ -19,3 +19,12 @@ export const APP_NAME = IS_FREEPORT_MVP ? 'Freeport Squares' : 'LocalSquares'
 export const APP_TAGLINE = IS_FREEPORT_MVP ? 'Freeport Neighborhood Billboards' : 'Your Neighborhood Billboards'
 export const CITY_NAME = IS_FREEPORT_MVP ? 'Freeport' : 'The Bahamas'
 export const REGION_NAME = IS_FREEPORT_MVP ? 'Freeport & Grand Bahama' : 'Nassau & The Bahamas'
+
+/** Hero video path for landing (local; works in staging/local). */
+export const HERO_VIDEO = '/videos/hero-video.mp4'
+
+/** Contact email for footer/contact links. Override via env if needed. */
+export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'hello@freeportsquares.com'
+
+/** Company/about URL (e.g. DFBA). Override via env if needed. */
+export const COMPANY_URL = process.env.NEXT_PUBLIC_COMPANY_URL || 'https://gbpa.com/'

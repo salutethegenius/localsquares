@@ -11,7 +11,7 @@
 - **Client / Owner:** Freeport Squares (Built by Kemis Digital)
 - **Type:** Client Project (SaaS — neighborhood billboard / local business discovery)
 - **Date Deployed:** *(fill when first deployed)*
-- **Last Updated:** March 8, 2026
+- **Last Updated:** March 10, 2026
 
 ---
 
@@ -24,7 +24,7 @@
 | Railway (Backend) | `https://your-backend.railway.app` *(fill API URL)*          | FastAPI (Nixpacks), root: `backend` |
 | Supabase          | (project in Supabase Dashboard)                              | Postgres + Auth + Storage           |
 | Domain Registrar  | `freeportsquares.com` *(check registrar)*                    | Custom domain on Vercel             |
-| GitHub Repo       | `https://github.com/salutethegenius/localsquares`            | Branch: `main`                      |
+| GitHub Repo       | `https://github.com/salutethegenius/freeportsquares`         | Branch: `main`                      |
 
 
 ---
@@ -90,6 +90,11 @@
 - STRIPE_PRICE_ANNUAL=
 - RESEND_API_KEY=
 - EMAIL_FROM=
+- REDIS_URL= *(optional — falls back to in-memory rate limiting)*
+- BLOCKED_IPS= *(optional — comma-separated)*
+- MAX_REQUEST_BODY_SIZE= *(optional — default 10 MB)*
+- REQUIRE_CLOUDFLARE_PROXY= *(optional — default false)*
+- TRUSTED_PROXIES= *(optional — comma-separated IP ranges)*
 
 ---
 
@@ -138,8 +143,22 @@ Run through this before showing anyone the project.
 
 ---
 
+## Security Hardening
+
+The backend includes layered API security (added March 2026):
+
+- **Rate Limiting** — slowapi with per-endpoint + per-user (JWT) + per-IP limits; optional Redis backing store; global 300 req/min DDoS net
+- **Firewall Middleware** — blocks scanner UAs, suspicious paths, oversized bodies, blocklisted IPs, optional Cloudflare-only enforcement
+- **CSRF Protection** — double-submit cookie on all state-changing requests; Stripe webhooks exempt; frontend `apiFetch()` wrapper auto-attaches token
+- **Input Sanitization** — Pydantic validators strip null bytes, control chars, SQL injection patterns; bleach strips HTML tags
+- **Security Headers** — HSTS, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP (form-action, base-uri)
+- **CORS Lockdown** — production locked to `freeportsquares.com` / `www.freeportsquares.com`
+
+---
+
 ## Notes & History
 
 - **YYYY-MM-DD** — Deployed initial version
 - **2026-03-08** — Production template created; home page UX (header, login, admin route), Sentry, Speed Insights committed and pushed
+- **2026-03-10** — API security hardening: rate limiting, firewall middleware, CSRF, input sanitization, XSS/CSP, proxy awareness. Backend deployed to Railway and connected to Vercel frontend.
 
