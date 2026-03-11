@@ -660,6 +660,10 @@ export default function LandingPage() {
           .pricing-steps .step-sub{
             font-size: 1rem;
           }
+          .hero-section{
+            padding-top: 80px;
+            min-height: 100vh;
+          }
         }
       `,
         }}
@@ -669,6 +673,7 @@ export default function LandingPage() {
 
       {/* ── HERO ── */}
       <section
+        className="hero-section"
         style={{
           position: "relative", height: "100vh", minHeight: 680,
           overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
