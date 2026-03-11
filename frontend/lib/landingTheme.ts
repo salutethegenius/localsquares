@@ -78,7 +78,7 @@ const darkTheme: LandingTheme = {
     pricingHighlightBorder:"#EAB308",
   },
   fonts: {
-    heading: "'Bebas Neue', sans-serif",
+    heading: "'Bebas Neue', cursive",
     body:    "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl:
       "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
