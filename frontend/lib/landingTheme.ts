@@ -78,9 +78,8 @@ const darkTheme: LandingTheme = {
     pricingHighlightBorder:"#EAB308",
   },
   fonts: {
-    // Use CSS variable from Next.js font loader for reliable cross-device loading
-    heading: "var(--font-bebas), 'Bebas Neue', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
-    body:    "var(--font-inter), 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    heading: "'Bebas Neue', sans-serif",
+    body:    "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl:
       "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
   },
@@ -119,9 +118,8 @@ const bahamianTheme: LandingTheme = {
     pricingHighlightBorder:"#00BDBD",
   },
   fonts: {
-    // Use CSS variable from Next.js font loader for reliable cross-device loading
-    heading: "var(--font-bebas), 'Bebas Neue', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif",
-    body:    "var(--font-inter), 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    heading: "'Syne', sans-serif",
+    body:    "'Plus Jakarta Sans', sans-serif",
     googleFontsUrl:
       "https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
   },
