@@ -28,6 +28,7 @@ function Reveal({
   scale = 0.96,
   style = {},
   theme,
+  className,
 }: {
   children: React.ReactNode;
   delay?: number;
@@ -35,11 +36,13 @@ function Reveal({
   scale?: number;
   style?: React.CSSProperties;
   theme: LandingTheme;
+  className?: string;
 }) {
   const [ref, inView] = useInView();
   return (
     <div
       ref={ref}
+      className={className}
       style={{
         opacity: inView ? 1 : 0,
         transform: inView ? "none" : `translateY(${y}px) scale(${scale})`,
@@ -637,6 +640,27 @@ export default function LandingPage() {
         @keyframes ticker  { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
         @keyframes dotPulse{ 0%,100%{transform:scale(1);opacity:0.7} 50%{transform:scale(1.8);opacity:0} }
         @keyframes scanline{ 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
+        @media (max-width: 767px){
+          .how-steps{
+            flex-direction: column;
+            align-items: center;
+          }
+          .how-steps-divider{
+            display: none;
+          }
+          .pricing-steps{
+            max-width: 100%;
+            margin: 0 auto 40px;
+            flex-wrap: nowrap;
+            gap: 12px;
+          }
+          .pricing-steps .step-label{
+            font-size: 0.8rem;
+          }
+          .pricing-steps .step-sub{
+            font-size: 1rem;
+          }
+        }
       `,
         }}
       />
@@ -813,13 +837,13 @@ export default function LandingPage() {
           <p style={{ fontFamily: t.fonts.body, color: t.colors.textMuted, fontSize: "1.125rem" }}>Three simple steps to get your business on the map.</p>
         </Reveal>
 
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 40, flexWrap: "wrap", justifyContent: "center", alignItems: "flex-start" }}>
+        <div className="how-steps" style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 40, flexWrap: "wrap", justifyContent: "center", alignItems: "flex-start" }}>
           <StepItem theme={t} delay={0}   num={1} icon="🗺️" title="Pick Your Area"   desc={`Choose your ${CITY_NAME} neighbourhood — Downtown, Lucaya, Eight Mile Rock, West End, and more.`} />
-          <div style={{ display: "flex", alignItems: "center", paddingTop: 28, opacity: 0.2 }}>
+          <div className="how-steps-divider" style={{ display: "flex", alignItems: "center", paddingTop: 28, opacity: 0.2 }}>
             <div style={{ width: 40, height: 1, background: `linear-gradient(90deg, ${t.colors.primary}, transparent)` }} />
           </div>
           <StepItem theme={t} delay={150} num={2} icon="🏢" title="Pin Your Business" desc="Add your details, hours, photos, and what makes your business special. Make it pop." />
-          <div style={{ display: "flex", alignItems: "center", paddingTop: 28, opacity: 0.2 }}>
+          <div className="how-steps-divider" style={{ display: "flex", alignItems: "center", paddingTop: 28, opacity: 0.2 }}>
             <div style={{ width: 40, height: 1, background: `linear-gradient(90deg, transparent, ${t.colors.primary})` }} />
           </div>
           <StepItem theme={t} delay={300} num={3} icon="🔍" title="Get Discovered"   desc={`Locals find you when searching their area. From Downtown ${CITY_NAME} to Lucaya, Eight Mile Rock to West End.`} />
@@ -842,7 +866,7 @@ export default function LandingPage() {
           </Reveal>
           <Reveal theme={t} delay={200}>
             <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-              {["🔒 Secure Payments via Stripe", `🌴 Made for ${CITY_NAME}`, "✕ Cancel Anytime"].map((item, i) => (
+              {["🔒 Secure Payments via Cash N Go", `🌴 Made for ${CITY_NAME}`, "✕ Cancel Anytime"].map((item, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(0,0,0,0.15)", borderRadius: 100, padding: "8px 18px" }}>
                   <span style={{ fontFamily: t.fonts.body, fontWeight: 600, fontSize: "0.945rem", color: "rgba(255,255,255,0.9)" }}>{item}</span>
                 </div>
@@ -863,13 +887,18 @@ export default function LandingPage() {
           </p>
         </Reveal>
 
-        <Reveal theme={t} delay={100} style={{ maxWidth: 600, margin: "0 auto 56px", display: "flex", alignItems: "center", justifyContent: "center", gap: 0, flexWrap: "wrap" }}>
+        <Reveal
+          theme={t}
+          delay={100}
+          className="pricing-steps"
+          style={{ maxWidth: 600, margin: "0 auto 56px", display: "flex", alignItems: "center", justifyContent: "center", gap: 0, flexWrap: "wrap" }}
+        >
           {[{ n: 1, label: "Sign Up", sub: "FREE" }, { n: 2, label: "Create Listing", sub: "FREE" }, { n: 3, label: "Go Live!", sub: "$1" }].map((s, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center" }}>
               <div style={{ textAlign: "center", padding: "0 20px" }}>
                 <div style={{ width: 52, height: 52, borderRadius: "50%", background: s.n === 3 ? t.colors.primary : `${t.colors.primary}22`, border: s.n === 3 ? "none" : `2px solid ${t.colors.primary}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px", fontFamily: t.fonts.heading, fontSize: "1.5rem", color: s.n === 3 ? t.colors.tickerText : t.colors.primary }}>{s.n}</div>
-                <div style={{ fontFamily: t.fonts.body, fontSize: "0.875rem", color: t.colors.textMuted, fontWeight: 600 }}>{s.label}</div>
-                <div style={{ fontFamily: t.fonts.heading, fontSize: "1.125rem", color: t.colors.primary, letterSpacing: 1 }}>{s.sub}</div>
+                <div className="step-label" style={{ fontFamily: t.fonts.body, fontSize: "0.875rem", color: t.colors.textMuted, fontWeight: 600 }}>{s.label}</div>
+                <div className="step-sub" style={{ fontFamily: t.fonts.heading, fontSize: "1.125rem", color: t.colors.primary, letterSpacing: 1 }}>{s.sub}</div>
               </div>
               {i < 2 && <div style={{ width: 40, height: 1, background: t.colors.border, flexShrink: 0 }} />}
             </div>
