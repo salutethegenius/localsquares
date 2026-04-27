@@ -33,9 +33,6 @@ export const createBrowserClient = (): SupabaseClient => {
   return browserClient
 }
 
-// Legacy export for backwards compatibility
-export const supabase = createBrowserClient()
-
 // Server-side Supabase client (for API routes, server components)
 export const createServerClient = () => {
   return createClient(supabaseUrl, supabaseAnonKey, {
