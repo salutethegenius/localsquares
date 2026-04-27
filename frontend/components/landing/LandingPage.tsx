@@ -803,10 +803,10 @@ export default function LandingPage() {
 
       {/* ── TICKER ── */}
       <div style={{ background: t.colors.tickerBg, padding: "11px 0", overflow: "hidden" }}>
-        <div style={{ display: "flex", animation: "ticker 22s linear infinite", whiteSpace: "nowrap" }}>
+        <div style={{ display: "flex", animation: "ticker 14s linear infinite", whiteSpace: "nowrap" }}>
           {[...Array(2)].map((_, j) => (
             <span key={j} style={{ display: "flex", gap: 48, paddingRight: 48 }}>
-              {["📍 Pin Your Business", "👁️ Get Seen First", "💰 Pay What You Use", `🌴 Made for ${CITY_NAME}`, "📱 Tap-First Design", "🔍 Local Discovery"].map((item) => (
+              {["📍 Pin Your Business", "👁️ Get Seen First", "🤝 Support Community", `🌴 Made for ${CITY_NAME}`, "📱 Tap-First Design", "🔍 Local Discovery"].map((item) => (
                 <span key={item} style={{ fontFamily: t.fonts.heading, letterSpacing: 2.5, fontSize: "1rem", color: t.colors.tickerText }}>{item}</span>
               ))}
             </span>
