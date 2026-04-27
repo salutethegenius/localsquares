@@ -22,7 +22,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npm run build
+      - name: Build
+        env:
+          # Dummy values: prerender constructs a Supabase client at module
+          # load, but no requests are made during the build itself.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
+          NEXT_PUBLIC_API_URL: https://api.example.com
+        run: npm run build
 
   backend:
     name: Backend lint & smoke test
@@ -38,4 +45,9 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
-      - run: python -c "from app.main import app; print('FastAPI app imports OK')"
+      - name: Smoke test - import FastAPI app
+        env:
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-dummy-service-role-key
+          SUPABASE_JWT_SECRET: ci-dummy-jwt-secret
+        run: python -c "from app.main import app; print('FastAPI app imports OK')"
