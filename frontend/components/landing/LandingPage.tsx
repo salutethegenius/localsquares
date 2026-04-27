@@ -865,8 +865,8 @@ export default function LandingPage() {
               Locals Supporting Locals
             </div>
             <blockquote style={{ fontFamily: t.fonts.heading, fontSize: "clamp(1.6rem, 4vw, 2.8rem)", color: t.colors.text, letterSpacing: 1.5, lineHeight: 1.3, marginBottom: 36 }}>
-              "From Downtown {CITY_NAME} to Lucaya, from Eight Mile Rock to West End —{" "}
-              <span style={{ color: t.colors.primary }}>we're bringing {CITY_NAME} together.</span>"
+              &ldquo;From Downtown {CITY_NAME} to Lucaya, from Eight Mile Rock to West End —{" "}
+              <span style={{ color: t.colors.primary }}>we&rsquo;re bringing {CITY_NAME} together.</span>&rdquo;
             </blockquote>
           </Reveal>
           <Reveal theme={t} delay={200}>
