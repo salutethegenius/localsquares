@@ -166,12 +166,27 @@ class FeaturedService:
         
         return result
     
-    def confirm_booking(self, booking_id: UUID) -> Dict[str, Any]:
-        """Mark a booking as paid (called after payment confirmation)."""
-        response = self.supabase.table(self.table).update({
+    def confirm_booking(
+        self,
+        booking_id: UUID,
+        user_id: Optional[UUID] = None,
+    ) -> Dict[str, Any]:
+        """
+        Mark a booking as paid.
+
+        When called from the user-facing route, pass user_id so the update is
+        scoped to bookings owned by that user. The Stripe webhook path may
+        omit user_id since the signed event is the source of truth.
+        """
+        query = self.supabase.table(self.table).update({
             "payment_status": "paid"
-        }).eq("id", str(booking_id)).execute()
-        
+        }).eq("id", str(booking_id))
+
+        if user_id is not None:
+            query = query.eq("user_id", str(user_id))
+
+        response = query.execute()
+
         return response.data[0] if response.data else None
     
     # ==================== User Bookings ====================
