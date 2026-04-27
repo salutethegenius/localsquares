@@ -9,6 +9,7 @@ Algorithm Summary:
 - Already-seen penalty: 0.5x for same visitor same day
 - Featured cards: Reserved slot in positions 1-4
 """
+import logging
 import random
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Dict, Any
@@ -16,6 +17,14 @@ from uuid import UUID
 from app.core.database import get_supabase_client
 from app.services.board_service import BoardService
 from supabase import Client
+
+logger = logging.getLogger(__name__)
+
+# Worker-local guard so the lazy daily reset runs at most once per hour per
+# process. The underlying SQL filter is idempotent (only resets rows older
+# than 24h), so this is purely to avoid an UPDATE on every rotation request.
+_LAST_RESET_ATTEMPT: Optional[datetime] = None
+_RESET_INTERVAL = timedelta(hours=1)
 
 
 def _board_service() -> BoardService:
@@ -57,6 +66,8 @@ class RotationService:
             return []
         now = datetime.now(timezone.utc)
         today = now.date()
+
+        self._maybe_reset_daily_impressions(now)
         
         # 1. Get all active pins for the board
         pins_response = self.supabase.table("pins").select(
@@ -238,6 +249,25 @@ class RotationService:
             "user_agent": user_agent
         }).execute()
     
+    def _maybe_reset_daily_impressions(self, now: datetime) -> None:
+        """
+        Trigger the 24h impression reset at most once per hour per worker.
+
+        Failures are logged and swallowed so a transient DB hiccup never
+        breaks a rotation read.
+        """
+        global _LAST_RESET_ATTEMPT
+        if (
+            _LAST_RESET_ATTEMPT is not None
+            and now - _LAST_RESET_ATTEMPT < _RESET_INTERVAL
+        ):
+            return
+        _LAST_RESET_ATTEMPT = now
+        try:
+            self.reset_daily_impressions()
+        except Exception:
+            logger.exception("reset_daily_impressions failed")
+
     def reset_daily_impressions(self) -> int:
         """
         Reset 24h impression counts for pins.
