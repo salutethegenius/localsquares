@@ -38,4 +38,9 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
-      - run: python -c "from app.main import app; print('FastAPI app imports OK')"
+      - name: Smoke test - import FastAPI app
+        env:
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-dummy-service-role-key
+          SUPABASE_JWT_SECRET: ci-dummy-jwt-secret
+        run: python -c "from app.main import app; print('FastAPI app imports OK')"
