@@ -128,15 +128,16 @@ async def confirm_booking(
 ):
     """Confirm a booking after payment."""
     service = get_featured_service()
-    
-    booking = service.confirm_booking(booking_id)
-    
+    user_id = UUID(current_user["id"])
+
+    booking = service.confirm_booking(booking_id, user_id=user_id)
+
     if not booking:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Booking not found"
         )
-    
+
     return FeaturedBookingResponse(**booking)
 
 
