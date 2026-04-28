@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
+import { trackImpression, getSessionId } from '@/lib/analytics'
 import PinCard from './PinCard'
 import { motion } from 'framer-motion'
 
@@ -12,8 +13,6 @@ interface Pin {
   caption: string | null
   image_url: string
   thumbnail_url: string | null
-  slot_row: number | null
-  slot_col: number | null
   board_id?: string
 }
 
@@ -30,38 +29,30 @@ export default function BoardGrid({ boardId, gridCols }: BoardGridProps) {
   useEffect(() => {
     async function fetchPins() {
       try {
-        const supabase = createBrowserClient()
-        
-        // Fetch pins for this board
-        const { data, error } = await supabase
-          .from('pins')
-          .select(`
-            id,
-            title,
-            caption,
-            image_url,
-            thumbnail_url,
-            pin_slots(row_position, col_position)
-          `)
-          .eq('board_id', boardId)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
+        const sessionId = getSessionId()
+        const response = await apiFetch(
+          `/api/v1/pins/board/${boardId}/rotated?limit=100`,
+          {
+            headers: sessionId ? { 'X-Session-ID': sessionId } : {},
+          }
+        )
 
-        if (error) throw error
+        if (!response.ok) {
+          throw new Error(`Rotation fetch failed: ${response.status}`)
+        }
 
-        // Transform data to include slot positions
-        const pinsWithSlots: Pin[] = (data || []).map((pin: any) => ({
+        const data: any[] = await response.json()
+
+        const rotated: Pin[] = data.map((pin) => ({
           id: pin.id,
           title: pin.title,
-          caption: pin.caption,
+          caption: pin.caption ?? null,
           image_url: pin.image_url,
-          thumbnail_url: pin.thumbnail_url,
-          slot_row: pin.pin_slots?.[0]?.row_position || null,
-          slot_col: pin.pin_slots?.[0]?.col_position || null,
+          thumbnail_url: pin.thumbnail_url ?? null,
           board_id: boardId,
         }))
 
-        setPins(pinsWithSlots)
+        setPins(rotated)
       } catch (error) {
         console.error('Error fetching pins:', error)
       } finally {
@@ -77,10 +68,7 @@ export default function BoardGrid({ boardId, gridCols }: BoardGridProps) {
   // Track impressions on mount
   useEffect(() => {
     if (pins.length > 0) {
-      // Track impressions (lightweight, fire and forget)
-      const { trackImpression, getSessionId } = require('@/lib/analytics')
       const sessionId = getSessionId()
-      
       pins.forEach((pin) => {
         trackImpression(pin.id, boardId, sessionId).catch(console.error)
       })
