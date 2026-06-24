@@ -22,14 +22,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - name: Build
-        env:
-          # Dummy values: prerender constructs a Supabase client at module
-          # load, but no requests are made during the build itself.
-          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
-          NEXT_PUBLIC_API_URL: https://api.example.com
-        run: npm run build
+      - run: npm run build
 
   backend:
     name: Backend lint & smoke test
